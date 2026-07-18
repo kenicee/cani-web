@@ -5322,7 +5322,7 @@ function renderMarkersMapa(lista){
     // Descripción (máx 2 líneas)
     var _desc = p.descripcion || '';
     var descHtml = _desc
-      ? '<div style="font-size:11px;color:#5C7A77;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">"'+_desc+'"</div>'
+      ? '<div style="font-size:11px;color:#5C7A77;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">"'+_escapeHtml(_desc)+'"</div>'
       : '';
 
     // Insignias (máx 3)
@@ -5345,8 +5345,8 @@ function renderMarkersMapa(lista){
         '<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">'+
           avatarHtml+
           '<div>'+
-            '<div class="popup-nombre">'+p.nombre+'</div>'+
-            '<div class="popup-zona">📍 '+p.zona+' · '+(_servLabel[p.servicio]||p.servicio)+'</div>'+
+            '<div class="popup-nombre">'+_escapeHtml(p.nombre||'')+'</div>'+
+            '<div class="popup-zona">📍 '+_escapeHtml(p.zona||'')+' · '+(_servLabel[p.servicio]||p.servicio)+'</div>'+
           '</div>'+
         '</div>'+
         ratingHtml+
@@ -5560,9 +5560,9 @@ function _buildCard(p, i){
   var bg     = _GRADIENTS_GRID[i%_GRADIENTS_GRID.length];
   var firstFoto = p.fotos&&p.fotos.length ? p.fotos[0] : null;
   var imgEl  = firstFoto
-    ? '<img src="'+firstFoto+'" class="paseador-foto-img" alt="'+nombre+'"/>'
+    ? '<img src="'+firstFoto+'" class="paseador-foto-img" alt="'+_escapeHtml(nombre)+'"/>'
     : prof.avatar_url
-      ? '<img src="'+prof.avatar_url+'" class="paseador-foto-img" alt="'+nombre+'"/>'
+      ? '<img src="'+prof.avatar_url+'" class="paseador-foto-img" alt="'+_escapeHtml(nombre)+'"/>'
       : '<div class="paseador-foto-placeholder" style="background:'+bg+';color:#fff;font-family:var(--font-head);font-size:48px;font-weight:800;">'+initial+'</div>';
   var uid        = p.user_id&&!p.user_id.startsWith('demo') ? p.user_id : null;
   var clickAttr  = uid ? 'onclick="abrirPerfilPublico(\''+uid+'\')"' : '';
@@ -5589,10 +5589,10 @@ function _buildCard(p, i){
     +'<div class="paseador-badge">'+imgEl+'</div>'
     +'<div class="paseador-info">'
       +'<div class="paseador-header">'
-        +'<div class="paseador-nombre">'+nombre+'</div>'
+        +'<div class="paseador-nombre">'+_escapeHtml(nombre)+'</div>'
         +'<div class="paseador-precio">'+precio+'</div>'
       +'</div>'
-      +'<div class="paseador-zona">📍 '+barrio+' · '+(esPas?'Paseador/a':'Cuidador/a')+'</div>'
+      +'<div class="paseador-zona">📍 '+_escapeHtml(barrio)+' · '+(esPas?'Paseador/a':'Cuidador/a')+'</div>'
       +descHtml
       +ratingHtml
       +'<div class="paseador-tags">'

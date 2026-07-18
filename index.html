@@ -2945,6 +2945,7 @@ async function handleRegister(e){
     profileData.barrio           = document.getElementById('duenioBarrio').value;
     profileData.cant_perros      = parseInt(document.getElementById('duenioCantPerros').value) || 1;
     profileData.servicio_buscado = document.getElementById('duenioServicio').value || null;
+    if(!profileData.barrio){ showAuthError('Elegí tu barrio de la lista.'); return; }
   } else if(_selectedType === 'paseador'){
     profileData.barrio         = document.getElementById('walkerBarrio').value;
     profileData.precio_paseo   = parseInt(document.getElementById('walkerPrecioPaseo').value)   || 0;
@@ -2952,6 +2953,8 @@ async function handleRegister(e){
     profileData.descripcion    = document.getElementById('walkerDesc').value;
     profileData.tiene_patio    = document.getElementById('walkerPatio').value === 'si';
     profileData.servicios      = Array.from(document.querySelectorAll('#walkerFields input[name=servicio]:checked')).map(function(c){ return c.value; }).join(',');
+    if(!profileData.barrio){ showAuthError('Elegí tu barrio de la lista.'); return; }
+    if(profileData.precio_paseo <= 0){ showAuthError('Ingresá un precio por paseo mayor a 0.'); return; }
   } else if(_selectedType === 'cuidador'){
     profileData.barrio         = document.getElementById('cuidadorBarrio').value;
     profileData.mascotas_acepta= document.getElementById('cuidadorMascotas').value;
@@ -2960,6 +2963,8 @@ async function handleRegister(e){
     profileData.precio_dia     = parseInt(document.getElementById('cuidadorPrecio').value) || 0;
     profileData.descripcion    = document.getElementById('cuidadorDesc').value;
     profileData.servicios      = 'cuidado';
+    if(!profileData.barrio){ showAuthError('Elegí tu barrio de la lista.'); return; }
+    if(profileData.precio_dia <= 0){ showAuthError('Ingresá un precio por día mayor a 0.'); return; }
   }
 
   setSubmitLoading('registerForm', true);
@@ -4989,6 +4994,8 @@ async function submitPaseador(e){
       disponibilidad_dias:disponibilidad_dias,
       fotos:fotos
     };
+    if(!datos.barrio){ showToast('Elegí tu barrio de la lista.',''); btn.disabled=false; btn.textContent='Enviar postulación'; return; }
+    if(datos.precio_paseo<=0){ showToast('Ingresá un precio por paseo mayor a 0.',''); btn.disabled=false; btn.textContent='Enviar postulación'; return; }
     var _pLat=parseFloat((document.getElementById('rLat')||{}).value)||null;
     var _pLng=parseFloat((document.getElementById('rLng')||{}).value)||null;
     if(_pLat&&_pLng){datos.lat=_pLat;datos.lng=_pLng;}
@@ -5045,6 +5052,8 @@ async function submitCuidador(e){
       ofrece_guarderia:ofreceGuarderia,
       precio_guarderia:ofreceGuarderia?(parseInt((document.getElementById('rPrecioGuarderia')||{}).value)||0):null
     };
+    if(!datos.barrio){ showToast('Elegí tu barrio de la lista.',''); btn.disabled=false; btn.textContent='Enviar postulación'; return; }
+    if(datos.precio_dia<=0){ showToast('Ingresá un precio por día mayor a 0.',''); btn.disabled=false; btn.textContent='Enviar postulación'; return; }
     var _cLat=parseFloat((document.getElementById('rLat')||{}).value)||null;
     var _cLng=parseFloat((document.getElementById('rLng')||{}).value)||null;
     if(_cLat&&_cLng){datos.lat=_cLat;datos.lng=_cLng;}

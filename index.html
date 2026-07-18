@@ -5236,7 +5236,6 @@ async function loadMapaData(){
       var base=(p.lat&&p.lng)
         ? {lat:+p.lat,lng:+p.lng}
         : (COORDS_BARRIOS[bar] || {lat:-34.6037,lng:-58.3816});
-      console.log('[Mapa]',p._tipo, pr.full_name||p.user_id, '| lat:',base.lat,'lng:',base.lng,'| barrio:',bar,'| lat/lng propios:',(p.lat&&p.lng)?'sí':'no (usando barrio/CABA)');
       lista.push({
         uid:p.user_id, nombre:pr.full_name||(p._tipo==='paseador'?'Paseador/a':'Cuidador/a'),
         zona:bar, precio:p._tipo==='paseador'?(p.precio_paseo||0):(p.precio_dia||0),
@@ -5627,7 +5626,6 @@ function _setGridSection(gridId, headId, countId, lista, fallback, show){
   var data=lista.length?lista:fallback;
   if(count) count.textContent=lista.length?lista.length+' disponibles':'';
   grid.innerHTML=data.length?data.map(_buildCard).join(''):'<div class="grid-empty">Sin resultados. Intentá con otros filtros.</div>';
-  console.log('[Grid]',gridId,'→',data.length,'cards, display:',grid.style.display,'innerHTML length:',grid.innerHTML.length);
   requestAnimationFrame(function(){
     grid.style.display='grid';
     grid.querySelectorAll('.paseador-card').forEach(function(c){ c.style.opacity='1'; c.style.visibility='visible'; });

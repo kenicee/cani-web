@@ -6032,7 +6032,18 @@ async function aprobarSolicitud(solicitudId){
       if(rUpd.error) throw new Error('Error al actualizar perfil: '+rUpd.error.message);
     } else {
       var rIns=await sb.from(tabla).insert(Object.assign({user_id:solicitud.user_id},datosRol,{activo:true}));
-      if(rIns.error) throw new Error('Error al insertar perfil: '+rIns.error.message);
+      if(rIns.error){
+        var esDuplicado = rIns.error.code==='23505' || (rIns.error.message||'').toLowerCase().indexOf('duplicate')>=0;
+        if(esDuplicado){
+          // El SELECT de arriba fue bloqueado por RLS y devolvió null aunque el registro ya existía.
+          // Reintentamos como UPDATE en vez de fallar con el error crudo de Postgres.
+          console.warn('[Aprobar] INSERT chocó con duplicate key (RLS ocultó el registro existente). Reintentando como UPDATE.');
+          var rUpd2=await sb.from(tabla).update(Object.assign({},datosRol,{activo:true})).eq('user_id',solicitud.user_id);
+          if(rUpd2.error) throw new Error('Error al actualizar perfil tras duplicate key: '+rUpd2.error.message);
+        } else {
+          throw new Error('Error al insertar perfil: '+rIns.error.message);
+        }
+      }
     }
 
     // 3. Actualizar estado de la solicitud

@@ -1,0 +1,118 @@
+# ============================================================
+# PETCARE - NETLIFY CONFIGURATION
+# ============================================================
+
+[build]
+  publish = "."
+  command = "echo 'Static site - no build needed'"
+
+# ============================================================
+# HEADERS DE SEGURIDAD
+# ============================================================
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(self)"
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval'
+        https://cdn.tailwindcss.com
+        https://sdk.mercadopago.com;
+      style-src 'self' 'unsafe-inline'
+        https://fonts.googleapis.com;
+      font-src 'self'
+        https://fonts.gstatic.com;
+      img-src 'self' data: blob:
+        https://images.unsplash.com
+        https://i.pravatar.cc
+        https://http2.mlstatic.com;
+      connect-src 'self'
+        https://*.supabase.co
+        https://api.mercadopago.com;
+      frame-src
+        https://www.mercadopago.com.ar
+        https://www.mercadopago.com;
+    """
+
+# ============================================================
+# CACHÉ ASSETS ESTÁTICOS
+# ============================================================
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/*.webp"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# ============================================================
+# REDIRECTS
+# ============================================================
+[[redirects]]
+  from = "/prestadores"
+  to = "/#prestadores"
+  status = 301
+
+[[redirects]]
+  from = "/tienda"
+  to = "/#tienda"
+  status = 301
+
+[[redirects]]
+  from = "/como-funciona"
+  to = "/#como-funciona"
+  status = 301
+
+# SPA fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# ============================================================
+# VARIABLES DE ENTORNO (definir en Netlify UI)
+# ============================================================
+# SUPABASE_URL=https://mtzwovwshijazsgbddwg.supabase.co
+# SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10endvdndzaGlqYXpzZ2JkZHdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2NDEzODUsImV4cCI6MjA5MzIxNzM4NX0.Ww4Jw6e8PT-bhkuhKet-Egyz8KWSpFK1OKMhqoSexFs
+# MP_PUBLIC_KEY=APP_USR-...
+# MP_ACCESS_TOKEN=APP_USR-...
+
+# ============================================================
+# NETLIFY FUNCTIONS (si las usás)
+# ============================================================
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# ============================================================
+# CONTEXTOS DE DEPLOY
+# ============================================================
+[context.production]
+  command = "echo 'Deploy producción'"
+
+[context.deploy-preview]
+  command = "echo 'Deploy preview'"
+
+[context.branch-deploy]
+  command = "echo 'Deploy rama'"

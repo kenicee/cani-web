@@ -4437,7 +4437,8 @@ async function _rpConfirmar(){
     if(r.error) throw new Error(r.error.message);
     var reservaId=r.data.id;
     if(_rp.mensaje){
-      await sb.from('mensajes').insert({reserva_id:reservaId,sender_id:_currentUser.id,receiver_id:_rp.prestadorId,contenido:_rp.mensaje,tipo:'texto'});
+      var rMsg=await sb.from('mensajes').insert({reserva_id:reservaId,sender_id:_currentUser.id,receiver_id:_rp.prestadorId,contenido:_rp.mensaje,tipo:'texto'});
+      if(rMsg.error) console.warn('[Reserva] La reserva se creó pero el mensaje inicial no se pudo guardar:',rMsg.error.message);
     }
     var savedPrestadorId=_rp.prestadorId;
     _cerrarRP();
@@ -4611,10 +4612,12 @@ async function _chatEnviar(){
 async function _chatAceptarReserva(){
   var r=_chat.reserva||{};if(!r.id)return;
   if(!confirm('¿Aceptás esta reserva?'))return;
-  await Promise.all([
+  var res=await Promise.all([
     sb.from('reservas').update({estado:'aceptado'}).eq('id',r.id),
     sb.from('mensajes').insert({reserva_id:r.id,sender_id:_currentUser.id,receiver_id:_chat.otroUserId,contenido:'¡Reserva aceptada! PIN de retiro: '+(r.pin_retiro||'----'),tipo:'aceptado'})
   ]);
+  var err=res[0].error||res[1].error;
+  if(err){ console.error('[Chat] Error al aceptar reserva:',err.message); showToast('Error al aceptar la reserva: '+err.message,''); return; }
   _chat.reserva.estado='aceptado';_chatRenderHeader();_chatRenderInputArea();
   showToast('Reserva aceptada ✓','success');
 }
@@ -4622,10 +4625,12 @@ async function _chatAceptarReserva(){
 async function _chatRechazarReserva(){
   var motivo=prompt('¿Por qué rechazás? (opcional)');if(motivo===null)return;
   var r=_chat.reserva||{};
-  await Promise.all([
+  var res=await Promise.all([
     sb.from('reservas').update({estado:'rechazado',motivo_rechazo:motivo||null}).eq('id',r.id),
     sb.from('mensajes').insert({reserva_id:r.id,sender_id:_currentUser.id,receiver_id:_chat.otroUserId,contenido:motivo||'El prestador rechazó la reserva.',tipo:'rechazado'})
   ]);
+  var err=res[0].error||res[1].error;
+  if(err){ console.error('[Chat] Error al rechazar reserva:',err.message); showToast('Error al rechazar la reserva: '+err.message,''); return; }
   _chat.reserva.estado='rechazado';_chatRenderHeader();_chatRenderInputArea();
   showToast('Reserva rechazada','');
 }
@@ -4634,16 +4639,22 @@ async function _chatProponerPrecio(){
   var ps=prompt('¿Qué precio proponés? (en pesos)');if(ps===null)return;
   var precio=parseInt(ps);if(isNaN(precio)||precio<=0){showToast('Ingresá un precio válido','');return;}
   var r=_chat.reserva||{};
-  await sb.from('mensajes').insert({reserva_id:r.id,sender_id:_currentUser.id,receiver_id:_chat.otroUserId,contenido:'Propuesta de precio: $'+precio.toLocaleString('es-AR'),tipo:'oferta',oferta_precio:precio,oferta_estado:'pendiente'});
+  var res=await sb.from('mensajes').insert({reserva_id:r.id,sender_id:_currentUser.id,receiver_id:_chat.otroUserId,contenido:'Propuesta de precio: $'+precio.toLocaleString('es-AR'),tipo:'oferta',oferta_precio:precio,oferta_estado:'pendiente'});
+  if(res.error){ console.error('[Chat] Error al proponer precio:',res.error.message); showToast('Error al enviar la propuesta: '+res.error.message,''); return; }
+  _chatLoadMsgs();
 }
 
 async function _chatAceptarOferta(msgId,precio){
   var r=_chat.reserva||{};
-  await Promise.all([sb.from('mensajes').update({oferta_estado:'aceptado'}).eq('id',msgId),sb.from('reservas').update({precio_acordado:precio}).eq('id',r.id)]);
+  var res=await Promise.all([sb.from('mensajes').update({oferta_estado:'aceptado'}).eq('id',msgId),sb.from('reservas').update({precio_acordado:precio}).eq('id',r.id)]);
+  var err=res[0].error||res[1].error;
+  if(err){ console.error('[Chat] Error al aceptar oferta:',err.message); showToast('Error al aceptar la oferta: '+err.message,''); return; }
   _chatLoadMsgs();showToast('Oferta aceptada: $'+Number(precio).toLocaleString('es-AR'),'success');
 }
 async function _chatRechazarOferta(msgId){
-  await sb.from('mensajes').update({oferta_estado:'rechazado'}).eq('id',msgId);_chatLoadMsgs();
+  var res=await sb.from('mensajes').update({oferta_estado:'rechazado'}).eq('id',msgId);
+  if(res.error){ console.error('[Chat] Error al rechazar oferta:',res.error.message); showToast('Error al rechazar la oferta: '+res.error.message,''); return; }
+  _chatLoadMsgs();
 }
 
 // ── RESERVAS TAB ─────────────────────────────────────────────

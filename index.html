@@ -373,6 +373,8 @@ textarea.auth-input{resize:vertical;min-height:80px;}
 .walker-fields{display:flex;flex-direction:column;gap:14px;border-top:1.5px solid var(--g200);padding-top:16px;}
 .walker-fields-title{font-size:12px;font-weight:700;color:var(--primary);letter-spacing:1.5px;text-transform:uppercase;}
 .servicios-check-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.servicios-check-group.pref-3col{grid-template-columns:1fr 1fr 1fr;}
+@media(max-width:480px){.servicios-check-group.pref-3col{grid-template-columns:1fr;}}
 .servicio-check{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--g200);border-radius:10px;cursor:pointer;transition:.2s;font-size:13px;font-weight:600;color:var(--g600);user-select:none;}
 .servicio-check input{accent-color:var(--primary);cursor:pointer;width:15px;height:15px;flex-shrink:0;}
 .servicio-check:has(input:checked){border-color:var(--primary);background:var(--primary-lt);color:var(--primary);}
@@ -705,6 +707,8 @@ textarea.uform-input{resize:vertical;min-height:72px;}
   .uform-grid{grid-template-columns:1fr;}
   .rol-cards{grid-template-columns:1fr;}
   .dias-check-group{grid-template-columns:repeat(4,1fr);}
+  .auth-type-selector{grid-template-columns:1fr;gap:8px;}
+  .auth-type-btn:nth-child(3){grid-column:auto;}
 }
 
 /* ── NAV DROPDOWN ─────────────────────────────────────── */
@@ -776,7 +780,6 @@ h1,h2,h3,h4{line-height:1.12;}
 /* ── MOBILE 375px ────────────────────────────────── */
 @media(max-width:375px){
   .como-tabs{flex-direction:column;}
-  .auth-type-selector{grid-template-columns:1fr;gap:8px;}
   .hero-stats{flex-wrap:wrap;gap:16px;}
   .hero-badge{font-size:12px;padding:8px 14px;}
   .servicios-grid{gap:14px;}
@@ -1457,7 +1460,7 @@ h1,h2,h3,h4{line-height:1.12;}
               <div class="uform-group">
                 <div class="uform-section-title">Preferencias de servicio</div>
                 <label class="uform-label" style="font-weight:600;">¿Qué servicio buscás principalmente?</label>
-                <div class="servicios-check-group" style="grid-template-columns:1fr 1fr 1fr;">
+                <div class="servicios-check-group pref-3col">
                   <label class="servicio-check"><input type="radio" name="perfilServicioBuscado" value="paseo"/> 🦮 Paseo</label>
                   <label class="servicio-check"><input type="radio" name="perfilServicioBuscado" value="cuidado"/> 🏡 Cuidado</label>
                   <label class="servicio-check"><input type="radio" name="perfilServicioBuscado" value="guarderia"/> ☀️ Guardería</label>

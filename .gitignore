@@ -3,3 +3,4 @@
 .claude/scheduled_tasks.lock
 node_modules/
 *.log
+CONTEXTO.md

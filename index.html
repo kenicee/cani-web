@@ -5106,6 +5106,7 @@ function _cerrarBookingModal(){_cerrarRP();}
 // Devuelve { init_point } — la URL del checkout de MercadoPago.
 var _mpInitPoint = null;   // link de checkout ya creado para la reserva actual
 var _mpCreando   = false;
+var _MP_MSG_SIN_PRECIO = 'Este paseador no tiene precio configurado. Contactanos para más información.';
 
 // Crea la preferencia de pago. Se llama una vez al confirmar la reserva (así el
 // link ya está listo) y, si eso falló o no corrió, otra vez desde pagarConMP().
@@ -5146,8 +5147,15 @@ async function _crearPreferenciaMP(){
       hora:         rsv.horario === 'todo_el_dia'
                       ? '08:00'
                       : ((rsv.horario && String(rsv.horario).split('-')[0]) || '09:00'),
-      precio:       window.precioPaseadorBase
+      precio:       window.precioPaseadorBase,
+      // Para que la preferencia quede atada a la reserva (la función tiene que
+      // usarlo como external_reference para que el webhook sepa qué fila marcar).
+      reservaId:    rsv.id
     };
+    // La función valida los campos con un chequeo falsy, así que precio 0 lo
+    // toma como faltante y responde 400 "Faltan campos requeridos" (verificado).
+    // Cortamos antes con un mensaje que se entienda.
+    if(!window.precioPaseadorBase) throw new Error(_MP_MSG_SIN_PRECIO);
     console.log('[MP] Invocando create-payment...');
     console.log('[MP] reservaId (solo referencia local, la función no lo usa):', rsv.id);
     console.log('[MP] prestador_id:', payload.prestador_id);
@@ -5204,6 +5212,12 @@ function _mpSetBtnLabel(txt){
 
 async function pagarConMP(){
   var btn = document.getElementById('btn-pagar-mp');
+  // Sin precio base no hay nada que cobrar: avisar y no llamar a la función.
+  if(!window.precioPaseadorBase){
+    console.warn('[MP] Pago bloqueado: precioPaseadorBase =', window.precioPaseadorBase);
+    mostrarError(_MP_MSG_SIN_PRECIO);
+    return;
+  }
   if(btn){ btn.disabled = true; btn.style.opacity = '.75'; }
   _mpSetBtnLabel('Procesando...');
   try {
@@ -5302,6 +5316,23 @@ function mostrarReservaCtaModal(){
   document.getElementById('confirm-base').textContent     = '$' + base.toLocaleString('es-AR');
   document.getElementById('confirm-fee').textContent      = '$' + fee.toLocaleString('es-AR');
   document.getElementById('confirm-total').textContent    = '$' + total.toLocaleString('es-AR');
+
+  // Prestador sin precio cargado: el pago no puede avanzar, así que el botón
+  // queda deshabilitado en vez de ofrecer un click que solo puede fallar.
+  if(!base){
+    var btnPago = document.getElementById('btn-pagar-mp');
+    if(btnPago){
+      btnPago.disabled = true;
+      btnPago.style.background = '#B8C7C4';
+      btnPago.style.cursor = 'not-allowed';
+    }
+    _mpSetBtnLabel('Precio no disponible');
+    var cont = document.getElementById('confirm-total');
+    if(cont && cont.parentElement){
+      cont.parentElement.insertAdjacentHTML('afterend',
+        '<p style="font-size:12px;color:#DC2626;font-weight:600;margin-top:10px;">'+_MP_MSG_SIN_PRECIO+'</p>');
+    }
+  }
 }
 
 // Restaura los modales normales (el paso anterior los oculta con display:none inline

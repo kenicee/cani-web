@@ -6,6 +6,83 @@
 <link rel="icon" type="image/png" href="assets/icono.png"/>
 <link rel="apple-touch-icon" href="assets/icono.png"/>
 <title>Cani 🐾 — Paseadores y Cuidadores de Confianza</title>
+<meta name="description" content="Encontrá paseadores y cuidadores de mascotas verificados en tu barrio. Paseos, guardería diurna y cuidado en casa. Buenos Aires, Argentina."/>
+<meta name="keywords" content="paseador de perros Buenos Aires, cuidador de mascotas CABA, paseos de perros Palermo, guardería de mascotas Argentina"/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://caniargentina.com.ar"/>
+
+<meta property="og:title" content="Cani — Paseos y cuidado de mascotas en Buenos Aires"/>
+<meta property="og:description" content="Encontrá paseadores y cuidadores verificados en tu barrio. Pagos seguros con MercadoPago."/>
+<meta property="og:image" content="https://caniargentina.com.ar/assets/logo.png"/>
+<meta property="og:url" content="https://caniargentina.com.ar"/>
+<meta property="og:type" content="website"/>
+<meta property="og:locale" content="es_AR"/>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "url": "https://caniargentina.com.ar",
+      "name": "Cani",
+      "description": "Plataforma de paseos y cuidado de mascotas en Argentina",
+      "inLanguage": "es-AR"
+    },
+    {
+      "@type": "Organization",
+      "name": "Cani",
+      "url": "https://caniargentina.com.ar",
+      "logo": "https://caniargentina.com.ar/assets/logo.png",
+      "description": "Conectamos dueños de mascotas con paseadores y cuidadores verificados en Buenos Aires.",
+      "foundingDate": "2026",
+      "areaServed": { "@type": "City", "name": "Buenos Aires" },
+      "sameAs": [
+        "https://www.instagram.com/caniargentina/",
+        "https://www.tiktok.com/@caniargentina",
+        "https://www.facebook.com/cani.argentina.3"
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Cómo funciona Cani?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Buscás un paseador o cuidador en tu barrio, enviás una solicitud de reserva y pagás de forma segura con MercadoPago."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿En qué barrios opera Cani?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Operamos en toda la Ciudad Autónoma de Buenos Aires, con foco en Palermo, Belgrano y Recoleta."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cuánto cuesta un paseo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Los precios los fijan los paseadores. El promedio en Buenos Aires es de $2.800 a $5.000 por paseo."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo se verifican los paseadores?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Todos pasan por verificación de identidad antes de aparecer en la plataforma."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1389,7 +1466,7 @@ h1,h2,h3,h4{line-height:1.12;}
           <a href="#servicios" class="nav-dropdown-item">🏡 Cuidado en casa</a>
         </div>
       </li>
-      <li><a href="#como-funciona">¿Cómo funciona?</a></li>
+      <li><a href="#servicios">¿Cómo funciona?</a></li>
       <li><a href="#paseadores">Paseadores</a></li>
       <li><a href="#ser-paseador">Trabajá con Cani</a></li>
     </ul>
@@ -1415,7 +1492,7 @@ h1,h2,h3,h4{line-height:1.12;}
     <span class="mobile-menu-close" onclick="closeMenu()">✕</span>
     <div class="mobile-menu-links">
       <a href="#servicios" onclick="closeMenu()">Servicios</a>
-      <a href="#como-funciona" onclick="closeMenu()">¿Cómo funciona?</a>
+      <a href="#servicios" onclick="closeMenu()">¿Cómo funciona?</a>
       <a href="#paseadores" onclick="closeMenu()">Paseadores</a>
       <a href="#ser-paseador" onclick="closeMenu()">Trabajá con Cani</a>
       <a href="#download" onclick="closeMenu()" style="color:var(--primary);">Descargar app →</a>
@@ -3604,19 +3681,37 @@ var _addrResults      = [];
 
 var _perfilModoPublico = false;
 var _perfilUsuarioPublicoId = null;
+// Rol resuelto por getRolReal() para el perfil que se está mostrando. profiles.rol
+// puede estar desactualizado ('dueno' para alguien ya activo como paseador), así
+// que el resto de la página perfil debe usar éste y no leer profiles.rol de nuevo.
+var _perfilRolResuelto = null;
 
 async function getRolReal(userId){
-  var rp=await sb.from('profiles').select('rol').eq('id',userId).maybeSingle();
-  if(rp.data&&rp.data.rol&&rp.data.rol!=='dueno') return rp.data.rol;
-  // Si dice dueno, verificar si tiene perfil activo en paseadores o cuidadores
-  var rPas=await sb.from('paseadores').select('id').eq('user_id',userId).eq('activo',true).maybeSingle();
+  // La fuente de verdad es dónde hay realmente una fila activa, NO profiles.rol.
+  // Antes se confiaba en profiles.rol en cuanto decía algo distinto de 'dueno', y
+  // alcanza con que haya quedado desfasado (p. ej. rol='cuidador' para alguien
+  // que en realidad está en `paseadores`) para que el perfil público lea la tabla
+  // equivocada: sin fila ahí, queda sin precios, sin disponibilidad y con el
+  // flujo de reserva en $0.
+  var [rp,rPas,rCuid]=await Promise.all([
+    sb.from('profiles').select('rol').eq('id',userId).maybeSingle(),
+    sb.from('paseadores').select('id').eq('user_id',userId).eq('activo',true).maybeSingle(),
+    sb.from('cuidadores').select('id').eq('user_id',userId).eq('activo',true).maybeSingle()
+  ]);
+  var rolProf=(rp.data&&rp.data.rol)||null;
+  // Si profiles.rol coincide con una fila real, respetarlo (cubre a quien es
+  // paseador y cuidador a la vez: manda su rol declarado).
+  if(rolProf==='paseador'&&rPas.data) return 'paseador';
+  if(rolProf==='cuidador'&&rCuid.data) return 'cuidador';
+  // No coincide con ninguna fila: usar la tabla que sí tiene datos y, si es el
+  // perfil propio, dejar profiles.rol consistente (RLS no permite tocar ajenos).
+  var esPropio=!!(_currentUser&&_currentUser.id===userId);
   if(rPas.data){
-    await sb.from('profiles').update({rol:'paseador'}).eq('id',userId);
+    if(esPropio&&rolProf!=='paseador') await sb.from('profiles').update({rol:'paseador'}).eq('id',userId);
     return 'paseador';
   }
-  var rCuid=await sb.from('cuidadores').select('id').eq('user_id',userId).eq('activo',true).maybeSingle();
   if(rCuid.data){
-    await sb.from('profiles').update({rol:'cuidador'}).eq('id',userId);
+    if(esPropio&&rolProf!=='cuidador') await sb.from('profiles').update({rol:'cuidador'}).eq('id',userId);
     return 'cuidador';
   }
   return 'dueno';
@@ -3667,6 +3762,7 @@ async function _cargarPaginaPerfil(userId, modoPublico){
   // Usar getRolReal también en modo público: profiles.rol puede estar desactualizado
   // (ver FIX 1 sesión 2026-07-17) y eso ocultaba el tab "Servicios" completo, no solo la descripción
   var rol = await getRolReal(userId);
+  _perfilRolResuelto = rol;
 
   // Sidebar
   var letra = (nombre[0] || '?').toUpperCase();
@@ -3985,6 +4081,10 @@ async function loadPerfilServicios(){
   // Stats básicos desde profile
   var rp = await sb.from('profiles').select('total_servicios,rating_promedio,rol,sobre_mi').eq('id',uid).maybeSingle();
   var d  = rp.data || {};
+  // No usar d.rol: si profiles.rol quedó en 'dueno' para alguien ya activo como
+  // paseador/cuidador, el tab Servicios del perfil público quedaba vacío y sin
+  // el botón "Reservar servicio" (el único punto de entrada al flujo de reserva).
+  var rolReal = _perfilRolResuelto || await getRolReal(uid);
   document.getElementById('statTotalServicios').textContent = d.total_servicios || 0;
   document.getElementById('statMesServicios').textContent   = '—';
   var rating = parseFloat(d.rating_promedio) || 0;
@@ -4014,13 +4114,13 @@ async function loadPerfilServicios(){
   if(_perfilModoPublico){
     if(proCard) proCard.style.display='none';
     // ── Modo público: cargar datos del rol y renderizar ──
-    if(pubDiv && (d.rol==='paseador'||d.rol==='cuidador')){
+    if(pubDiv && (rolReal==='paseador'||rolReal==='cuidador')){
       pubDiv.style.display='block';
       pubDiv.innerHTML='<div class="skel-line" style="width:60%;margin-bottom:16px;"></div>';
-      var tabla  = d.rol==='paseador' ? 'paseadores' : 'cuidadores';
+      var tabla  = rolReal==='paseador' ? 'paseadores' : 'cuidadores';
       var rRol   = await sb.from(tabla).select('*').eq('user_id',uid).maybeSingle();
       var rd     = rRol.data || {};
-      pubDiv.innerHTML = _buildPublicServiciosHtml(d.rol, rd, d, uid);
+      pubDiv.innerHTML = _buildPublicServiciosHtml(rolReal, rd, d, uid);
       // Cargar mini calendario público (bloqueados + reservas)
       var mesH=new Date().getMonth()+1;
       var añoH=new Date().getFullYear();
@@ -4028,7 +4128,7 @@ async function loadPerfilServicios(){
         var miniEl=document.getElementById('miniCalPublico');
         if(miniEl) miniEl.innerHTML=_buildMiniCal(mesH,añoH,r.bloqueados,r.reservas);
       });
-      if(d.rol==='paseador') _cargarFranjasHoyPublico(uid, rd);
+      if(rolReal==='paseador') _cargarFranjasHoyPublico(uid, rd);
     } else if(pubDiv){
       pubDiv.style.display='none';
     }
@@ -4209,6 +4309,27 @@ function precioConFee(precio){
   return Math.round((precio||0)*1.15);
 }
 
+// ── HELPERS DE FECHA ──────────────────────────────────────
+// `toISOString()` convierte a UTC: en Argentina (UTC-3) eso devuelve el día
+// ANTERIOR para cualquier hora local entre 00:00 y 03:00, y el SIGUIENTE cuando
+// se usa sobre una fecha-a-medianoche-local (`new Date('2026-08-05T00:00:00')`
+// → "2026-08-04"). Eso corría un día entero los bloqueos de período y hacía que
+// "hoy" apareciera como pasado en el calendario de reserva después de las 21hs.
+// Siempre construir el string YYYY-MM-DD con los getters locales.
+function _fechaLocal(d){
+  d = d || new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// Último día real del mes. Antes se usaba '-31' fijo como tope del rango, y
+// Postgres rechaza fechas inexistentes ('2026-02-31' → "date/time field value
+// out of range"), así que la query de agenda/reservas fallaba por completo en
+// febrero, abril, junio, septiembre y noviembre → el calendario mostraba todo
+// libre y tiraba error en consola.
+function _ultimoDiaMes(mes,año){ return new Date(año,mes,0).getDate(); }
+function _finDeMes(mes,año){
+  return año+'-'+String(mes).padStart(2,'0')+'-'+String(_ultimoDiaMes(mes,año)).padStart(2,'0');
+}
+
 // ── AGENDA / DISPONIBILIDAD ───────────────────────────────
 var _agendaMes  = new Date().getMonth()+1;
 var _agendaAño  = new Date().getFullYear();
@@ -4291,7 +4412,7 @@ function irHoyAgenda(){
 async function cargarAgendaCompleta(userId,mes,año){
   var mm=String(mes).padStart(2,'0');
   var ini=año+'-'+mm+'-01';
-  var fin=año+'-'+mm+'-31';
+  var fin=_finDeMes(mes,año);
   var rB=await sb.from('agenda_bloqueada').select('*').eq('user_id',userId).gte('fecha',ini).lte('fecha',fin);
   var rR=await sb.from('reservas').select('*').eq('paseador_id',userId).gte('fecha',ini).lte('fecha',fin).neq('estado','rechazado');
   return {bloqueados:rB.data||[],reservas:rR.data||[]};
@@ -4526,7 +4647,7 @@ async function bloquearPeriodo(userId,fechaInicio,fechaFin,motivo){
   for(var d=new Date(inicio); d<=fin; d.setDate(d.getDate()+1)){
     dias.push({
       user_id:userId,
-      fecha:d.toISOString().split('T')[0],
+      fecha:_fechaLocal(d),
       turno:'todo_el_dia',
       motivo:motivo||'Bloqueado'
     });
@@ -4544,7 +4665,7 @@ async function bloquearPeriodo(userId,fechaInicio,fechaFin,motivo){
 
 // ── MODAL "Bloquear período de vacaciones" (BUG 2) ────────
 function mostrarModalBloquearPeriodo(){
-  var hoy=new Date().toISOString().slice(0,10);
+  var hoy=_fechaLocal();
   var ov=document.createElement('div');
   ov.className='periodo-modal-overlay'; ov.id='periodoModalOverlay';
   ov.onclick=function(e){ if(e.target===ov) cerrarModalPeriodo(); };
@@ -4621,7 +4742,7 @@ async function _desbloquearPeriodoDesde(fecha){
   var base=new Date(fecha+'T00:00:00');
   var desde=new Date(base); desde.setDate(desde.getDate()-90);
   var hasta=new Date(base); hasta.setDate(hasta.getDate()+90);
-  var fmt=function(d){return d.toISOString().slice(0,10);};
+  var fmt=_fechaLocal;
   var r=await sb.from('agenda_bloqueada').select('id,fecha,motivo,turno,hora_inicio')
     .eq('user_id',_agendaUserId).eq('turno','todo_el_dia').gte('fecha',fmt(desde)).lte('fecha',fmt(hasta));
   var byDate={};
@@ -4681,7 +4802,8 @@ async function mostrarSheetReservado(reservaId){
   var partes=res.fecha?res.fecha.split('-'):['','',''];
   var label=partes[2]+'/'+partes[1]+'/'+partes[0];
   var estadoBadge={pendiente:'🟡 Pendiente',aceptado:'🟢 Aceptado',rechazado:'🔴 Rechazado'}[res.estado]||res.estado;
-  var pinHtml=res.pin_entrega?'<div style="background:#F0FDF4;border-radius:10px;padding:12px;margin:12px 0;font-size:13px;color:#166534;"><strong>PIN de entrega:</strong> '+res.pin_entrega+'</div>':'';
+  var _pin=res.pin_retiro||res.pin_entrega;
+  var pinHtml=_pin?'<div style="background:#F0FDF4;border-radius:10px;padding:12px;margin:12px 0;font-size:13px;color:#166534;"><strong>PIN de retiro:</strong> '+_pin+'</div>':'';
   var chatBtn=res.dueno_id?'<button class="btn-chat-res" onclick="cerrarAgendaSheet();abrirChat(\''+reservaId+'\',\''+res.dueno_id+'\')">💬 Chat</button>':'';
   var actionsHtml='<div class="agenda-reserva-actions" style="margin-top:16px;">';
   if(res.estado==='pendiente'){
@@ -4716,12 +4838,14 @@ async function mostrarSheetReservado(reservaId){
 
 async function responderReserva(reservaId,accion){
   cerrarAgendaSheet();
-  var payload={estado:accion,updated_at:new Date().toISOString()};
-  if(accion==='aceptado'){
-    payload.pin_entrega=Math.floor(100000+Math.random()*900000).toString();
-  }
-  var r=await sb.from('reservas').update(payload).eq('id',reservaId);
+  // El PIN vive en `pin_retiro` (es el que genera el flujo de reserva y el que
+  // leen el chat y el tab Reservas). Antes acá se escribía `pin_entrega`, una
+  // columna distinta, así que el PIN que veía el dueño y el que veía el
+  // prestador no coincidían — o quedaban vacíos.
+  var payload={estado:accion};
+  var r=await _updateReservaResiliente(reservaId,payload);
   if(r.error){showToast('Error: '+r.error.message,'');return;}
+  if(accion==='aceptado') await _asegurarPinReserva(reservaId,null);
   delete _agendaReservasCache[reservaId];
   showToast(accion==='aceptado'?'Reserva aceptada ✅ PIN generado':'Reserva rechazada','success');
   _renderAgendaMes();
@@ -4930,13 +5054,22 @@ async function abrirReservarPaseador(prestadorId, tipoRol){
   // cuidadores no tiene columna precio_paseo (y viceversa no tiene precio_dia/precio_guarderia) —
   // pedir columnas distintas por tabla, si no la query entera falla y todos los precios quedan en 0.
   var colsRol=tipoRol==='cuidador'
-    ? 'barrio,horario_inicio,horario_fin,duracion_servicio_min,precio_dia,precio_guarderia,dias_activos,ofrece_guarderia'
+    ? 'barrio,horario_inicio,horario_fin,duracion_servicio_min,precio_dia,precio_guarderia,dias_activos,ofrece_guarderia,capacidad_perros,capacidad_gatos'
     : 'barrio,horario_inicio,horario_fin,duracion_servicio_min,precio_paseo,dias_activos,capacidad_simultanea,ofrece_visita_rapida,precio_visita_rapida';
   var [rPres,rProf]=await Promise.all([
     sb.from(tabla).select(colsRol).eq('user_id',prestadorId).maybeSingle(),
     sb.from('profiles').select('full_name,avatar_url').eq('id',prestadorId).maybeSingle()
   ]);
-  if(rPres.error) console.error('[Precio] Error cargando datos de precio del prestador:', rPres.error.message);
+  // Si UNA sola de las columnas de la lista no existe todavía (las de
+  // "Configuración avanzada" se agregan por ALTER TABLE, y el schema cache de
+  // PostgREST puede ir atrasado), PostgREST rechaza la query COMPLETA y nos
+  // quedábamos sin ninguna columna → todos los precios en $0 y el flujo de
+  // reserva inservible. Reintentar con select('*') recupera lo que sí existe.
+  if(rPres.error){
+    console.warn('[Precio] La query por columnas falló ('+rPres.error.message+') — reintentando con select(*)');
+    rPres=await sb.from(tabla).select('*').eq('user_id',prestadorId).maybeSingle();
+    if(rPres.error) console.error('[Precio] Error cargando datos del prestador:', rPres.error.message);
+  }
   var pres=rPres.data||{}, prof=rProf.data||{};
   console.log('[Precio] fila cruda de '+tabla+':', pres);
   _rp.prestadorData={
@@ -4947,8 +5080,12 @@ async function abrirReservarPaseador(prestadorId, tipoRol){
     ofReG:!!(pres.ofrece_guarderia),
     ofreceVisitaRapida:!!(pres.ofrece_visita_rapida), precioVisitaRapida:pres.precio_visita_rapida||0,
     capacidad:pres.capacidad_simultanea||1,
+    capPerros:pres.capacidad_perros||0, capGatos:pres.capacidad_gatos||0,
     horario_inicio:pres.horario_inicio||'08:00', horario_fin:pres.horario_fin||'20:00',
-    diasActivos:pres.dias_activos||null, duracion:pres.duracion_servicio_min||60
+    diasActivos:pres.dias_activos||null,
+    // duracion_paseo_min es la columna que escribe "Configuración avanzada";
+    // duracion_servicio_min es la derivada. Tomar la que esté disponible.
+    duracion:pres.duracion_servicio_min||pres.duracion_paseo_min||60
   };
   console.log('[Reserva PASO 1] paseador:', prestadorId, _rp.prestadorData);
   var panel=document.getElementById('reservaPanel');
@@ -5123,16 +5260,24 @@ async function _rpStep1(){
   var mm=String(_rp.mes).padStart(2,'0');
   var añoN=_rp.año;
   var inicioMes=añoN+'-'+mm+'-01';
-  var finMes=añoN+'-'+mm+'-31';
+  var finMes=_finDeMes(_rp.mes,añoN);
   var [rB,rR]=await Promise.all([
     sb.from('agenda_bloqueada').select('fecha,turno,hora_inicio,hora_fin').eq('user_id',_rp.prestadorId).gte('fecha',inicioMes).lte('fecha',finMes),
-    sb.from('reservas').select('fecha,horario,estado').eq('paseador_id',_rp.prestadorId).gte('fecha',inicioMes).lte('fecha',finMes).in('estado',['pendiente','aceptado'])
+    sb.from('reservas').select('fecha,horario,estado,cantidad_mascotas').eq('paseador_id',_rp.prestadorId).gte('fecha',inicioMes).lte('fecha',finMes).in('estado',['pendiente','aceptado'])
   ]);
+  // cantidad_mascotas puede no existir todavía en `reservas`; sin este reintento
+  // la query entera falla y el calendario muestra todo el mes como libre.
+  if(rR.error){
+    console.warn('[Reserva] reservas select falló ('+rR.error.message+') — reintentando sin cantidad_mascotas');
+    rR=await sb.from('reservas').select('fecha,horario,estado').eq('paseador_id',_rp.prestadorId).gte('fecha',inicioMes).lte('fecha',finMes).in('estado',['pendiente','aceptado']);
+  }
+  if(rB.error) console.warn('[Reserva] agenda_bloqueada select falló:',rB.error.message);
+  if(rR.error) console.warn('[Reserva] reservas select falló:',rR.error.message);
   var bloqueados=rB.data||[], reservas=rR.data||[];
 
   var bloqPorDia={};bloqueados.forEach(function(b){(bloqPorDia[b.fecha]=bloqPorDia[b.fecha]||[]).push(b);});
   var resPorDia={};reservas.forEach(function(r){(resPorDia[r.fecha]=resPorDia[r.fecha]||[]).push(r);});
-  var hoyStr=new Date().toISOString().slice(0,10);
+  var hoyStr=_fechaLocal();
   var providerCap={horario_inicio:d.horario_inicio,horario_fin:d.horario_fin,duracion_paseo_min:d.duracion,capacidad_simultanea:d.capacidad||1};
 
   // Capacity-aware: un día solo se marca "bloqueado" (no reservable, rojo) si está
@@ -5140,7 +5285,12 @@ async function _rpStep1(){
   function estadoDia(fechaStr, dowKey){
     if(fechaStr<hoyStr) return 'pasado';
     if(d.diasActivos && diasActivos.indexOf(dowKey)<0) return 'pasado';
-    var est=_estadoDiaPaseador(fechaStr,bloqPorDia[fechaStr]||[],resPorDia[fechaStr]||[],providerCap);
+    // Un cuidador se llena por cantidad de mascotas alojadas, no por franjas
+    // horarias: con la lógica de paseador su calendario nunca se marcaba lleno
+    // y se podía reservar por encima de su capacidad.
+    var est = _rp.prestadorRol==='cuidador'
+      ? _estadoDiaCuidador(fechaStr,bloqPorDia[fechaStr]||[],resPorDia[fechaStr]||[],{capacidad_perros:d.capPerros,capacidad_gatos:d.capGatos})
+      : _estadoDiaPaseador(fechaStr,bloqPorDia[fechaStr]||[],resPorDia[fechaStr]||[],providerCap);
     return est==='disponible'||est==='parcial' ? 'disponible' : 'bloqueado';
   }
 
@@ -5570,7 +5720,7 @@ async function _rpConfirmar(){
     console.log('[Reserva] EXITOSA:', data);
     var reservaId=data.id;
     if(mensajeInicial){
-      var rMsg=await sb.from('mensajes').insert({reserva_id:reservaId,sender_id:_currentUser.id,receiver_id:_rp.prestadorId,contenido:mensajeInicial,tipo:'texto'});
+      var rMsg=await _msgInsert(reservaId,_rp.prestadorId,mensajeInicial,{tipo:'texto'});
       if(rMsg.error) console.warn('[Reserva] La reserva se creó pero el mensaje inicial no se pudo guardar:',rMsg.error.message);
     }
     _cerrarRP();
@@ -5582,9 +5732,69 @@ async function _rpConfirmar(){
 }
 
 // ── CHAT PANEL ────────────────────────────────────────────────
+// La tabla `mensajes` en Supabase usa texto/remitente_id/destinatario_id, pero
+// todo este código estaba escrito contra contenido/sender_id/receiver_id, así
+// que TODOS los INSERT fallaban con "column does not exist" y el chat no
+// mandaba un solo mensaje. Para no depender de un nombre puntual, escribimos
+// los dos juegos de nombres y vamos descartando los que la tabla no tenga
+// (`_msgColsFaltantes` cachea eso para no repetir el reintento en cada mensaje).
+// Las columnas opcionales tipo/oferta_precio/oferta_estado se descartan igual si
+// no existen: el chat de texto funciona ya, y las tarjetas de oferta se activan
+// solas cuando se corra el ALTER TABLE.
+var _msgColsFaltantes = {};
+
+function _msgPayload(reservaId, receptorId, texto, extra){
+  var p = {
+    reserva_id: reservaId,
+    texto: texto, contenido: texto,
+    remitente_id: _currentUser.id, sender_id: _currentUser.id,
+    destinatario_id: receptorId, receiver_id: receptorId
+  };
+  Object.assign(p, extra||{});
+  Object.keys(_msgColsFaltantes).forEach(function(k){ delete p[k]; });
+  return p;
+}
+
+async function _msgInsert(reservaId, receptorId, texto, extra){
+  var payload = _msgPayload(reservaId, receptorId, texto, extra);
+  for(var i=0;i<12;i++){
+    var r = await sb.from('mensajes').insert(payload).select().single();
+    if(!r.error) return r;
+    var m = (r.error.message||'').match(/Could not find the '([^']+)' column|column "?([a-z_]+)"? of relation "mensajes" does not exist|column mensajes\.([a-z_]+) does not exist/);
+    var col = m && (m[1]||m[2]||m[3]);
+    if(col && Object.prototype.hasOwnProperty.call(payload,col)){
+      _msgColsFaltantes[col] = true;
+      delete payload[col];
+      // Nunca quedarse sin el campo de texto ni sin remitente.
+      if(!payload.texto && !payload.contenido) return r;
+      continue;
+    }
+    // PGRST116 = el INSERT anduvo pero el SELECT de vuelta no devolvió fila
+    // (RLS suele permitir escribir y no leer). No es un fallo de envío:
+    // reintentamos sin .select() y el llamador recarga la conversación.
+    if(r.error.code==='PGRST116'){
+      var r2 = await sb.from('mensajes').insert(payload);
+      if(!r2.error) return {data:null,error:null};
+      return r2;
+    }
+    return r;
+  }
+  return await sb.from('mensajes').insert(payload).select().single();
+}
+
+// Lee un mensaje sin importar con qué nombres esté guardado.
+function _msgTexto(m){ return (m && (m.contenido || m.texto)) || ''; }
+function _msgEmisor(m){ return m && (m.sender_id || m.remitente_id); }
+
 var _chat={
   reservaId:null, otroUserId:null, otroNombre:null, otroAvatar:null,
-  reserva:null, miRol:null, channel:null
+  reserva:null, miRol:null, channel:null,
+  // Ids ya pintados en pantalla. El envío ahora pinta el mensaje al instante
+  // (antes dependía de Realtime, que viene DESHABILITADO por tabla en Supabase:
+  // si no está activado para `mensajes`, el mensaje se insertaba bien pero
+  // desaparecía de la vista y el chat parecía roto). Con el set evitamos que
+  // el evento Realtime, cuando sí está activo, duplique la burbuja.
+  renderedIds:{}
 };
 
 async function abrirChat(reservaId, otroUserId){
@@ -5654,16 +5864,29 @@ async function _chatLoadMsgs(){
 
 function _chatRenderMsgs(msgs){
   var el=document.getElementById('chatMsgs');if(!el)return;
+  _chat.renderedIds={};
   if(!msgs.length){
     el.innerHTML='<div class="chat-empty"><div class="chat-empty-icon">💬</div><div class="chat-empty-title">Todavía no hay mensajes</div><div style="font-size:12px;">Empezá la conversación</div></div>';
     return;
   }
+  msgs.forEach(function(m){ if(m.id) _chat.renderedIds[m.id]=true; });
   el.innerHTML=msgs.map(function(m){return _chatBubbleHtml(m);}).join('');
   el.scrollTop=el.scrollHeight;
 }
 
+// Agrega una burbuja al final si ese mensaje no está ya en pantalla.
+function _chatAppendMsg(m){
+  var el=document.getElementById('chatMsgs');
+  if(!el||!m) return;
+  if(m.id && _chat.renderedIds[m.id]) return;
+  if(m.id) _chat.renderedIds[m.id]=true;
+  var empty=el.querySelector('.chat-empty'); if(empty) empty.remove();
+  el.insertAdjacentHTML('beforeend',_chatBubbleHtml(m));
+  el.scrollTop=el.scrollHeight;
+}
+
 function _chatBubbleHtml(m){
-  var isMine=m.sender_id===_currentUser.id;
+  var isMine=_msgEmisor(m)===_currentUser.id;
   var cls=isMine?'mine':'theirs';
   var ts=_chatRelTime(m.created_at);
   var av=isMine?'':'<div class="chat-mini-av">'+(_chat.otroNombre||'?').charAt(0).toUpperCase()+'</div>';
@@ -5677,13 +5900,13 @@ function _chatBubbleHtml(m){
     return '<div class="chat-bubble-row '+cls+'">'+av+'<div class="chat-card oferta"><div class="chat-card-title">💰 Propuesta de precio</div><div class="chat-card-desc">Se propone $'+oferta.toLocaleString('es-AR')+' por el servicio</div>'+btns+'</div></div>';
   }
   if(m.tipo==='aceptado'){
-    return '<div class="chat-bubble-row '+cls+'">'+av+'<div class="chat-card aceptado"><div class="chat-card-title">✓ Reserva aceptada</div><div class="chat-card-desc">'+_escapeHtml(m.contenido||'')+'</div></div></div>';
+    return '<div class="chat-bubble-row '+cls+'">'+av+'<div class="chat-card aceptado"><div class="chat-card-title">✓ Reserva aceptada</div><div class="chat-card-desc">'+_escapeHtml(_msgTexto(m))+'</div></div></div>';
   }
   if(m.tipo==='rechazado'){
-    return '<div class="chat-bubble-row '+cls+'">'+av+'<div class="chat-card rechazado"><div class="chat-card-title">✗ Reserva rechazada</div><div class="chat-card-desc">'+_escapeHtml(m.contenido||'')+'</div><div class="chat-card-btns"><button class="chat-card-btn secondary" onclick="_cerrarChat()">Buscar otro prestador</button></div></div></div>';
+    return '<div class="chat-bubble-row '+cls+'">'+av+'<div class="chat-card rechazado"><div class="chat-card-title">✗ Reserva rechazada</div><div class="chat-card-desc">'+_escapeHtml(_msgTexto(m))+'</div><div class="chat-card-btns"><button class="chat-card-btn secondary" onclick="_cerrarChat()">Buscar otro prestador</button></div></div></div>';
   }
   var ticks=isMine?'<span style="font-size:10px;opacity:.65;">✓✓</span>':'';
-  return '<div class="chat-bubble-row '+cls+'">'+av+'<div><div class="chat-bubble '+cls+'">'+_escapeHtml(m.contenido||'')+'</div><div class="chat-meta '+cls+'">'+ts+ticks+'</div></div></div>';
+  return '<div class="chat-bubble-row '+cls+'">'+av+'<div><div class="chat-bubble '+cls+'">'+_escapeHtml(_msgTexto(m))+'</div><div class="chat-meta '+cls+'">'+ts+ticks+'</div></div></div>';
 }
 
 function _chatRelTime(ts){
@@ -5721,10 +5944,7 @@ function _chatSubscribe(){
   if(_chat.channel){try{sb.removeChannel(_chat.channel);}catch(e){}}
   _chat.channel=sb.channel('chat-'+_chat.reservaId)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'mensajes',filter:'reserva_id=eq.'+_chat.reservaId},function(payload){
-      var el=document.getElementById('chatMsgs');if(!el)return;
-      var empty=el.querySelector('.chat-empty');if(empty)empty.remove();
-      el.insertAdjacentHTML('beforeend',_chatBubbleHtml(payload.new));
-      el.scrollTop=el.scrollHeight;
+      _chatAppendMsg(payload.new);
     })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'reservas',filter:'id=eq.'+_chat.reservaId},function(payload){
       _chat.reserva=payload.new;_chatRenderHeader();_chatRenderInputArea();
@@ -5736,33 +5956,86 @@ async function _chatEnviar(){
   var input=document.getElementById('chatInput');if(!input)return;
   var texto=input.value.trim();if(!texto||!_chat.reservaId)return;
   input.value='';
-  var r=await sb.from('mensajes').insert({reserva_id:_chat.reservaId,sender_id:_currentUser.id,receiver_id:_chat.otroUserId,contenido:texto,tipo:'texto'});
-  if(r.error)showToast('Error al enviar','');
+  // .select().single() nos devuelve la fila insertada para pintarla en el acto,
+  // sin depender de que Realtime esté habilitado en la tabla `mensajes`.
+  var r=await _msgInsert(_chat.reservaId,_chat.otroUserId,texto,{tipo:'texto'});
+  if(r.error){
+    console.error('[Chat] Error al enviar mensaje:',r.error.message);
+    showToast('Error al enviar: '+r.error.message,'');
+    input.value=texto; // no perder lo escrito
+    return;
+  }
+  if(r.data) _chatAppendMsg(r.data);
+  else _chatLoadMsgs(); // no vino la fila de vuelta: recargar la conversación
 }
+
+// Enter envía, Shift+Enter hace salto de línea.
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter'||e.shiftKey) return;
+  if(e.target&&e.target.id==='chatInput'){ e.preventDefault(); _chatEnviar(); }
+});
 
 async function _chatAceptarReserva(){
   var r=_chat.reserva||{};if(!r.id)return;
   if(!confirm('¿Aceptás esta reserva?'))return;
+  // Si la reserva no traía PIN (reservas viejas, o insert que perdió la columna),
+  // generarlo acá en vez de mandarle "PIN de retiro: ----" al dueño.
+  var pin=await _asegurarPinReserva(r.id,r.pin_retiro);
   var res=await Promise.all([
-    sb.from('reservas').update({estado:'aceptado'}).eq('id',r.id),
-    sb.from('mensajes').insert({reserva_id:r.id,sender_id:_currentUser.id,receiver_id:_chat.otroUserId,contenido:'¡Reserva aceptada! PIN de retiro: '+(r.pin_retiro||'----'),tipo:'aceptado'})
+    _updateReservaResiliente(r.id,{estado:'aceptado'}),
+    _msgInsert(r.id,_chat.otroUserId,'¡Reserva aceptada! PIN de retiro: '+pin,{tipo:'aceptado'})
   ]);
   var err=res[0].error||res[1].error;
   if(err){ console.error('[Chat] Error al aceptar reserva:',err.message); showToast('Error al aceptar la reserva: '+err.message,''); return; }
-  _chat.reserva.estado='aceptado';_chatRenderHeader();_chatRenderInputArea();
+  _chat.reserva.estado='aceptado'; _chat.reserva.pin_retiro=pin;
+  _chatRenderHeader();_chatRenderInputArea();
+  _chatAppendMsg(res[1].data);
   showToast('Reserva aceptada ✓','success');
+}
+
+// Devuelve el PIN de retiro de la reserva, generándolo y guardándolo si falta.
+async function _asegurarPinReserva(reservaId,pinActual){
+  if(pinActual) return pinActual;
+  var rD=await sb.from('reservas').select('pin_retiro').eq('id',reservaId).maybeSingle();
+  var pin=(rD.data||{}).pin_retiro;
+  if(pin) return pin;
+  pin=String(Math.floor(1000+Math.random()*9000));
+  await _updateReservaResiliente(reservaId,{pin_retiro:pin});
+  return pin;
+}
+
+// Mismo criterio que _insertReservaResiliente: si una columna del payload no
+// existe todavía en `reservas` (o el schema cache de PostgREST está atrasado),
+// sacarla y reintentar en vez de que falle toda la operación. `updated_at` era
+// el caso típico: aceptar/rechazar una reserva tiraba error por esa sola columna.
+async function _updateReservaResiliente(reservaId,payload){
+  var body=Object.assign({},payload);
+  for(var i=0;i<10;i++){
+    var r=await sb.from('reservas').update(body).eq('id',reservaId);
+    if(!r.error) return r;
+    var m=(r.error.message||'').match(/Could not find the '([^']+)' column/);
+    if(m&&Object.prototype.hasOwnProperty.call(body,m[1])){
+      console.warn('[Reserva] La columna "'+m[1]+'" no existe en `reservas` — reintentando el update sin ese campo.');
+      delete body[m[1]];
+      if(!Object.keys(body).length) return {error:null};
+      continue;
+    }
+    return r;
+  }
+  return await sb.from('reservas').update(body).eq('id',reservaId);
 }
 
 async function _chatRechazarReserva(){
   var motivo=prompt('¿Por qué rechazás? (opcional)');if(motivo===null)return;
   var r=_chat.reserva||{};
   var res=await Promise.all([
-    sb.from('reservas').update({estado:'rechazado',motivo_rechazo:motivo||null}).eq('id',r.id),
-    sb.from('mensajes').insert({reserva_id:r.id,sender_id:_currentUser.id,receiver_id:_chat.otroUserId,contenido:motivo||'El prestador rechazó la reserva.',tipo:'rechazado'})
+    _updateReservaResiliente(r.id,{estado:'rechazado',motivo_rechazo:motivo||null}),
+    _msgInsert(r.id,_chat.otroUserId,motivo||'El prestador rechazó la reserva.',{tipo:'rechazado'})
   ]);
   var err=res[0].error||res[1].error;
   if(err){ console.error('[Chat] Error al rechazar reserva:',err.message); showToast('Error al rechazar la reserva: '+err.message,''); return; }
   _chat.reserva.estado='rechazado';_chatRenderHeader();_chatRenderInputArea();
+  _chatAppendMsg(res[1].data);
   showToast('Reserva rechazada','');
 }
 
@@ -5770,14 +6043,14 @@ async function _chatProponerPrecio(){
   var ps=prompt('¿Qué precio proponés? (en pesos)');if(ps===null)return;
   var precio=parseInt(ps);if(isNaN(precio)||precio<=0){showToast('Ingresá un precio válido','');return;}
   var r=_chat.reserva||{};
-  var res=await sb.from('mensajes').insert({reserva_id:r.id,sender_id:_currentUser.id,receiver_id:_chat.otroUserId,contenido:'Propuesta de precio: $'+precio.toLocaleString('es-AR'),tipo:'oferta',oferta_precio:precio,oferta_estado:'pendiente'});
+  var res=await _msgInsert(r.id,_chat.otroUserId,'Propuesta de precio: $'+precio.toLocaleString('es-AR'),{tipo:'oferta',oferta_precio:precio,oferta_estado:'pendiente'});
   if(res.error){ console.error('[Chat] Error al proponer precio:',res.error.message); showToast('Error al enviar la propuesta: '+res.error.message,''); return; }
   _chatLoadMsgs();
 }
 
 async function _chatAceptarOferta(msgId,precio){
   var r=_chat.reserva||{};
-  var res=await Promise.all([sb.from('mensajes').update({oferta_estado:'aceptado'}).eq('id',msgId),sb.from('reservas').update({precio_acordado:precio}).eq('id',r.id)]);
+  var res=await Promise.all([sb.from('mensajes').update({oferta_estado:'aceptado'}).eq('id',msgId),_updateReservaResiliente(r.id,{precio_acordado:precio})]);
   var err=res[0].error||res[1].error;
   if(err){ console.error('[Chat] Error al aceptar oferta:',err.message); showToast('Error al aceptar la oferta: '+err.message,''); return; }
   _chatLoadMsgs();showToast('Oferta aceptada: $'+Number(precio).toLocaleString('es-AR'),'success');
@@ -5890,21 +6163,24 @@ function _rsvCardPrestador(r,showActions){
 
 async function _rsvAceptar(reservaId,duenoId){
   if(!confirm('¿Aceptás esta reserva?'))return;
-  var rD=await sb.from('reservas').select('pin_retiro').eq('id',reservaId).maybeSingle();
-  var pin=(rD.data||{}).pin_retiro||'----';
-  await Promise.all([
-    sb.from('reservas').update({estado:'aceptado'}).eq('id',reservaId),
-    sb.from('mensajes').insert({reserva_id:reservaId,sender_id:_currentUser.id,receiver_id:duenoId,contenido:'¡Reserva aceptada! PIN de retiro: '+pin,tipo:'aceptado'})
+  var pin=await _asegurarPinReserva(reservaId,null);
+  var res=await Promise.all([
+    _updateReservaResiliente(reservaId,{estado:'aceptado'}),
+    _msgInsert(reservaId,duenoId,'¡Reserva aceptada! PIN de retiro: '+pin,{tipo:'aceptado'})
   ]);
+  var err=res[0].error||res[1].error;
+  if(err){ console.error('[Reservas] Error al aceptar:',err.message); showToast('Error al aceptar: '+err.message,''); return; }
   showToast('Reserva aceptada ✓','success');loadReservasTab();
 }
 
 async function _rsvRechazar(reservaId,duenoId){
   var motivo=prompt('Motivo del rechazo (opcional):');if(motivo===null)return;
-  await Promise.all([
-    sb.from('reservas').update({estado:'rechazado',motivo_rechazo:motivo||null}).eq('id',reservaId),
-    sb.from('mensajes').insert({reserva_id:reservaId,sender_id:_currentUser.id,receiver_id:duenoId,contenido:motivo||'Reserva rechazada.',tipo:'rechazado'})
+  var res=await Promise.all([
+    _updateReservaResiliente(reservaId,{estado:'rechazado',motivo_rechazo:motivo||null}),
+    _msgInsert(reservaId,duenoId,motivo||'Reserva rechazada.',{tipo:'rechazado'})
   ]);
+  var err=res[0].error||res[1].error;
+  if(err){ console.error('[Reservas] Error al rechazar:',err.message); showToast('Error al rechazar: '+err.message,''); return; }
   showToast('Reserva rechazada','');loadReservasTab();
 }
 
@@ -6743,8 +7019,8 @@ var _mapaData = null; // null = usar PASEADORES_MAP demo
 async function loadMapaData(){
   try {
     var [rP, rC] = await Promise.all([
-      sb.from('paseadores').select('lat,lng,barrio,precio_paseo,user_id,activo').or('activo.eq.true,activo.is.null'),
-      sb.from('cuidadores').select('lat,lng,barrio,precio_dia,ofrece_guarderia,user_id,activo').or('activo.eq.true,activo.is.null')
+      sb.from('paseadores').select('lat,lng,barrio,precio_paseo,descripcion,user_id,activo').or('activo.eq.true,activo.is.null'),
+      sb.from('cuidadores').select('lat,lng,barrio,precio_dia,ofrece_guarderia,descripcion,user_id,activo').or('activo.eq.true,activo.is.null')
     ]);
     console.log('[Mapa] paseadores cargados:', rP.data?.length, rP.error);
     console.log('[Mapa] cuidadores cargados:', rC.data?.length, rC.error);
@@ -6911,10 +7187,13 @@ function renderMarkersMapa(lista){
 }
 
 function filtrarMapa(){
+  // Si todavía no volvió loadMapaData(), filtrar borraba todos los markers y
+  // mostraba "sin resultados" por una carrera, no por los filtros.
+  if(_mapaData === null) return;
   var servicio       = document.getElementById('filtroServicio').value;
   var precioMax      = parseInt(document.getElementById('filtroPrecio').value) || Infinity;
   var disponibilidad = document.getElementById('filtroDisponibilidad').value;
-  var source         = _mapaData !== null ? _mapaData : [];
+  var source         = _mapaData;
   var filtrados = source.filter(function(p){
     if(servicio){
       var extra  = PERFILES_EXTRA[p.id];
@@ -7288,10 +7567,17 @@ async function loadPaseadoresCards(params){
 
     console.log('[Grid] paseadores cargados:', rP.data && rP.data.length, rP.error);
     console.log('[Grid] cuidadores cargados:', rC.data && rC.data.length, rC.error);
-    (rP.data||[]).forEach(function(p){ console.log('[Grid][paseador]', p.user_id, 'activo:', p.activo, 'barrio:', p.barrio); });
-    (rC.data||[]).forEach(function(c){ console.log('[Grid][cuidador]', c.user_id, 'activo:', c.activo, 'barrio:', c.barrio); });
     if(rC.error && gC) gC.innerHTML='<div class="grid-empty" style="color:#EF4444;">Error cargando cuidadores: '+rC.error.message+'</div>';
     if(rP.error && gP) gP.innerHTML='<div class="grid-empty" style="color:#EF4444;">Error cargando paseadores: '+rP.error.message+'</div>';
+    // RLS que bloquea el SELECT no devuelve error: devuelve 0 filas. Ese caso se
+    // confundía con "todavía no hay nadie registrado" y mostraba las cards demo,
+    // que es exactamente el síntoma de "los paseadores no aparecen en el listado".
+    if(!rP.error && !rC.error && !(rP.data||[]).length && !(rC.data||[]).length && !params.busqueda && !params.maxPrecio && !params.tipo){
+      console.warn('[Grid] 0 paseadores y 0 cuidadores sin error de query. Si hay registros en la DB, falta la policy RLS de lectura pública:\n'+
+        'CREATE POLICY "public_read_paseadores" ON paseadores FOR SELECT USING (true);\n'+
+        'CREATE POLICY "public_read_cuidadores" ON cuidadores FOR SELECT USING (true);\n'+
+        'CREATE POLICY "public_read_profiles"   ON profiles   FOR SELECT USING (true);');
+    }
 
     var paseadores=(rP.data||[]).map(function(p){return Object.assign({},p,{_rol:'paseador'});});
     var cuidadores=(rC.data||[]).map(function(c){return Object.assign({},c,{_rol:'cuidador'});});
@@ -7306,6 +7592,12 @@ async function loadPaseadoresCards(params){
       ]);
       var profMap={};
       (rProfs.data||[]).forEach(function(p){profMap[p.id]=p;});
+      // Sin lectura pública de `profiles` las cards salen sin nombre, sin foto y
+      // sin rating ("Cuidador/a · Buenos Aires"), aunque los paseadores existan.
+      if(!(rProfs.data||[]).length){
+        console.warn('[Grid] Hay '+uids.length+' prestador(es) pero 0 profiles legibles — falta la policy de lectura pública en `profiles`:\n'+
+          'CREATE POLICY "public_read_profiles" ON profiles FOR SELECT USING (true);');
+      }
       var insMap={};
       (rIns.data||[]).forEach(function(r){if(!insMap[r.user_id])insMap[r.user_id]=[];if(r.insignias)insMap[r.user_id].push(r);});
       // Merge en cada item (todos comparte refs con paseadores/cuidadores)
@@ -7350,8 +7642,10 @@ function filtrarCards(){
 // Cargar al arrancar la página
 window.addEventListener('load', function(){
   loadPaseadoresCards();
-  checkSupabase();
-  // checkData() y checkupCompleto() disponibles en consola para admins: checkData() / checkupCompleto()
+  // checkSupabase() ya NO corre automáticamente: hacía console.error por cada
+  // tabla/columna/bucket faltante en TODAS las visitas, ensuciando la consola
+  // (y filtrando el esquema). Sigue disponible a mano desde la consola,
+  // igual que checkData() y checkupCompleto().
 });
 
 // ── ADMIN PANEL ───────────────────────────────────────────

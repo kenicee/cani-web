@@ -5109,25 +5109,78 @@ var _mpCreando   = false;
 
 // Crea la preferencia de pago. Se llama una vez al confirmar la reserva (así el
 // link ya está listo) y, si eso falló o no corrió, otra vez desde pagarConMP().
-async function _crearPreferenciaMP(){
-  var rsv = window.reservaActual || {};
-  var pas = window.paseadorSeleccionado || {};
-  if(!rsv.id) throw new Error('No hay una reserva activa para pagar.');
-  var titulo = (rsv.servicioTipo==='paseo' ? 'Paseo con ' : 'Servicio con ') + (pas.nombre || 'prestador');
-  var email  = (window.currentUser && window.currentUser.email) || (_currentUser && _currentUser.email) || '';
-  var res = await sb.functions.invoke('create-payment', {
-    body: {
-      reservaId:  rsv.id,
-      titulo:     titulo,
-      precio:     window.precioTotalReserva,
-      duenoEmail: email
+// IMPORTANTE para debuggear: cuando la Edge Function responde non-2xx,
+// supabase-js tira un FunctionsHttpError cuyo .message es SIEMPRE el texto
+// genérico "Edge Function returned a non-2xx status code" — el motivo real
+// viene en el body de la respuesta, que queda en error.context (un Response).
+// Sin leer ese body no hay forma de saber qué falló, así que lo volcamos acá.
+async function _mpDetalleError(error){
+  var det = { name: error && error.name, message: error && error.message };
+  var ctx = error && error.context;
+  if(ctx){
+    det.status = ctx.status;
+    det.statusText = ctx.statusText;
+    if(typeof ctx.clone === 'function' || typeof ctx.text === 'function'){
+      try {
+        var raw = await (typeof ctx.clone === 'function' ? ctx.clone() : ctx).text();
+        det.body = raw;
+        try { det.bodyJson = JSON.parse(raw); } catch(_){}
+      } catch(e){ det.bodyError = 'No se pudo leer el body: '+e.message; }
     }
-  });
-  if(res.error) throw res.error;
-  var data = res.data || {};
-  if(!data.init_point) throw new Error('La respuesta de create-payment no trae init_point.');
-  _mpInitPoint = data.init_point;
-  return data;
+  }
+  return det;
+}
+
+async function _crearPreferenciaMP(){
+  try {
+    var rsv = window.reservaActual || {};
+    var pas = window.paseadorSeleccionado || {};
+    // Contrato real de la Edge Function: exige prestador_id, tipo, fecha, hora y
+    // precio. `precio` tiene que ser el precio BASE del prestador: la función le
+    // suma el 15% de fee ella misma (verificado: 1000 -> total 1150,
+    // 20000 -> total 23000). Mandarle el total ya con fee lo cobraría dos veces.
+    var payload = {
+      prestador_id: pas.user_id,
+      tipo:         window.tipoServicioSeleccionado || 'paseo',
+      fecha:        rsv.fecha,
+      hora:         rsv.horario === 'todo_el_dia'
+                      ? '08:00'
+                      : ((rsv.horario && String(rsv.horario).split('-')[0]) || '09:00'),
+      precio:       window.precioPaseadorBase
+    };
+    console.log('[MP] Invocando create-payment...');
+    console.log('[MP] reservaId (solo referencia local, la función no lo usa):', rsv.id);
+    console.log('[MP] prestador_id:', payload.prestador_id);
+    console.log('[MP] tipo:', payload.tipo);
+    console.log('[MP] fecha:', payload.fecha);
+    console.log('[MP] hora:', payload.hora, '| horario guardado:', rsv.horario);
+    console.log('[MP] precio BASE enviado:', payload.precio, '| tipo:', typeof payload.precio);
+    console.log('[MP] total esperado (base + 15%):', Math.round((payload.precio||0)*1.15));
+    console.log('[MP] body completo:', JSON.stringify(payload));
+    var sess = await sb.auth.getSession();
+    console.log('[MP] sesión activa:', !!(sess.data && sess.data.session), '| userId:', sess.data && sess.data.session && sess.data.session.user && sess.data.session.user.id);
+
+    var res = await sb.functions.invoke('create-payment', { body: payload });
+    var data = res.data, error = res.error;
+
+    console.log('[MP] data:', data);
+    console.log('[MP] error:', error);
+    if(data && data.total!=null) console.log('[MP] total que va a cobrar MercadoPago:', data.total);
+
+    if(error){
+      // Acá sale el motivo de verdad del non-2xx
+      console.error('[MP] DETALLE DEL ERROR (lo que devolvió la función):', await _mpDetalleError(error));
+      throw error;
+    }
+    if(!data || !data.init_point) throw new Error('No init_point en respuesta');
+
+    _mpInitPoint = data.init_point;
+    return data.init_point;
+
+  } catch(e){
+    console.error('[MP] Error completo:', e);
+    throw e;
+  }
 }
 
 // Precrea el link al confirmar la reserva (paso 3 del flujo). No bloquea ni
@@ -5156,7 +5209,7 @@ async function pagarConMP(){
   try {
     // Si el link ya se creó al confirmar, reusarlo: evita crear dos
     // preferencias distintas para la misma reserva.
-    var initPoint = _mpInitPoint || (await _crearPreferenciaMP()).init_point;
+    var initPoint = _mpInitPoint || await _crearPreferenciaMP();
     window.open(initPoint, '_blank');
     _mpSetBtnLabel('✅ Redirigido a MercadoPago');
     if(btn) btn.style.background = '#2D9B87';
@@ -5164,7 +5217,11 @@ async function pagarConMP(){
     console.error('[MP] Error:', e);
     _mpSetBtnLabel('Pagar ahora');
     if(btn){ btn.disabled = false; btn.style.opacity = '1'; }
-    mostrarError('Error al procesar el pago: ' + (e.message || e));
+    // Mostrar el motivo real en el toast, no el "non-2xx" genérico.
+    var det = await _mpDetalleError(e);
+    var motivo = (det.bodyJson && (det.bodyJson.error || det.bodyJson.message))
+              || det.body || e.message || String(e);
+    mostrarError('Error al procesar el pago: ' + motivo);
   }
 }
 
@@ -5192,7 +5249,11 @@ function mostrarReservaCtaModal(){
 
   var rsv = window.reservaActual || {};
   var pas = window.paseadorSeleccionado || {};
-  var total = Number(window.precioTotalReserva||0);
+  // Derivar todo del precio BASE, igual que hace create-payment, para que lo que
+  // se muestra sea exactamente lo que se va a cobrar (y no el fee dos veces).
+  var base  = Number(window.precioPaseadorBase||0);
+  var fee   = Math.round(base*0.15);
+  var total = Math.round(base*1.15);
 
   var modal=document.createElement('div');
   modal.id='modal-reserva-confirmada';
@@ -5213,6 +5274,10 @@ function mostrarReservaCtaModal(){
           +'📅 Fecha: <strong id="confirm-fecha"></strong><br>'
           +'🕐 Horario: <strong id="confirm-horario"></strong><br>'
           +'🐕 Mascota: <strong id="confirm-mascota"></strong><br>'
+          +'💵 Servicio: <strong id="confirm-base"></strong><br>'
+          +'🤝 Fee Cani (15%): <strong id="confirm-fee"></strong>'
+        +'</div>'
+        +'<div style="border-top:1px solid #C9E4DD;margin-top:10px;padding-top:10px;font-size:13px;color:#5C7A77;">'
           +'💰 Total: <strong id="confirm-total" style="color:#2D9B87;font-size:16px;"></strong>'
         +'</div>'
       +'</div>'
@@ -5234,6 +5299,8 @@ function mostrarReservaCtaModal(){
   document.getElementById('confirm-fecha').textContent    = rsv.fechaLabel || _fmtFechaReserva(rsv.fecha);
   document.getElementById('confirm-horario').textContent  = _fmtHorarioReserva(rsv.horario, rsv.prestadorRol);
   document.getElementById('confirm-mascota').textContent  = rsv.mascotaNombre || '—';
+  document.getElementById('confirm-base').textContent     = '$' + base.toLocaleString('es-AR');
+  document.getElementById('confirm-fee').textContent      = '$' + fee.toLocaleString('es-AR');
   document.getElementById('confirm-total').textContent    = '$' + total.toLocaleString('es-AR');
 }
 
@@ -5842,7 +5909,10 @@ async function _rpConfirmar(){
       servicioTipo:tipoServicio,
       prestadorRol:_rp.prestadorRol
     };
-    window.paseadorSeleccionado={ id:_rp.prestadorId, nombre:paseadorObj.nombre, barrio:paseadorObj.barrio };
+    window.paseadorSeleccionado={ user_id:_rp.prestadorId, id:_rp.prestadorId, nombre:paseadorObj.nombre, barrio:paseadorObj.barrio };
+    window.tipoServicioSeleccionado=tipoServicio;
+    // Precio BASE del prestador, sin fee: es el que espera create-payment.
+    window.precioPaseadorBase=precioPaseador;
     window.precioTotalReserva=precioTotal;
 
     _cerrarRP();

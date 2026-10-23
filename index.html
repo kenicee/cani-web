@@ -3500,6 +3500,8 @@ function _setNavAvatar(el, letter, avatarUrl){
 
 function updateNavbar(user){
   _currentUser = user;
+  // Alias global del usuario de Auth (lo usa el flujo de pago para el email).
+  window.currentUser = user;
   var loginBtn   = document.getElementById('navLoginBtn');
   var regBtn     = document.getElementById('navRegisterBtn');
   var navUser    = document.getElementById('navUser');
@@ -5099,41 +5101,140 @@ function _cerrarRP(){
 }
 function _cerrarBookingModal(){_cerrarRP();}
 
+// ── PAGO CON MERCADOPAGO ──────────────────────────────────
+// Edge Function `create-payment` (ya deployada con el token de producción).
+// Devuelve { init_point } — la URL del checkout de MercadoPago.
+var _mpInitPoint = null;   // link de checkout ya creado para la reserva actual
+var _mpCreando   = false;
+
+// Crea la preferencia de pago. Se llama una vez al confirmar la reserva (así el
+// link ya está listo) y, si eso falló o no corrió, otra vez desde pagarConMP().
+async function _crearPreferenciaMP(){
+  var rsv = window.reservaActual || {};
+  var pas = window.paseadorSeleccionado || {};
+  if(!rsv.id) throw new Error('No hay una reserva activa para pagar.');
+  var titulo = (rsv.servicioTipo==='paseo' ? 'Paseo con ' : 'Servicio con ') + (pas.nombre || 'prestador');
+  var email  = (window.currentUser && window.currentUser.email) || (_currentUser && _currentUser.email) || '';
+  var res = await sb.functions.invoke('create-payment', {
+    body: {
+      reservaId:  rsv.id,
+      titulo:     titulo,
+      precio:     window.precioTotalReserva,
+      duenoEmail: email
+    }
+  });
+  if(res.error) throw res.error;
+  var data = res.data || {};
+  if(!data.init_point) throw new Error('La respuesta de create-payment no trae init_point.');
+  _mpInitPoint = data.init_point;
+  return data;
+}
+
+// Precrea el link al confirmar la reserva (paso 3 del flujo). No bloquea ni
+// rompe el alta: si falla, pagarConMP() lo reintenta cuando el usuario toca
+// "Pagar ahora". El window.open() se hace recién en ese click a propósito:
+// abrirlo acá, dentro de una cadena async sin gesto del usuario, lo come el
+// bloqueador de pop-ups del navegador.
+function _precrearPreferenciaMP(){
+  if(_mpCreando) return;
+  _mpCreando = true;
+  _crearPreferenciaMP()
+    .then(function(){ console.log('[MP] Checkout listo para la reserva', (window.reservaActual||{}).id); })
+    .catch(function(e){ console.warn('[MP] No se pudo precrear el checkout (se reintenta al tocar Pagar):', e.message); })
+    .finally(function(){ _mpCreando = false; });
+}
+
+function _mpSetBtnLabel(txt){
+  var lbl = document.getElementById('btn-pagar-mp-label');
+  if(lbl) lbl.textContent = txt;
+}
+
+async function pagarConMP(){
+  var btn = document.getElementById('btn-pagar-mp');
+  if(btn){ btn.disabled = true; btn.style.opacity = '.75'; }
+  _mpSetBtnLabel('Procesando...');
+  try {
+    // Si el link ya se creó al confirmar, reusarlo: evita crear dos
+    // preferencias distintas para la misma reserva.
+    var initPoint = _mpInitPoint || (await _crearPreferenciaMP()).init_point;
+    window.open(initPoint, '_blank');
+    _mpSetBtnLabel('✅ Redirigido a MercadoPago');
+    if(btn) btn.style.background = '#2D9B87';
+  } catch(e){
+    console.error('[MP] Error:', e);
+    _mpSetBtnLabel('Pagar ahora');
+    if(btn){ btn.disabled = false; btn.style.opacity = '1'; }
+    mostrarError('Error al procesar el pago: ' + (e.message || e));
+  }
+}
+
+function mostrarError(msg){ showToast(msg, ''); }
+
+// Formatea fecha/horario guardados (YYYY-MM-DD y "09:00-10:00" / "todo_el_dia")
+// para mostrarlos en el resumen.
+function _fmtFechaReserva(f){
+  if(!f) return '—';
+  var p = String(f).split('-');
+  return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : String(f);
+}
+function _fmtHorarioReserva(h, rol){
+  if(!h) return '—';
+  if(h==='todo_el_dia') return 'Todo el día';
+  if(rol==='cuidador') return 'Entrega: '+String(h).split('-')[0];
+  return String(h).replace('-', ' — ');
+}
+
 function mostrarReservaCtaModal(){
   // Limpiar cualquier modal abierto
   document.querySelectorAll('.modal-overlay, .modal, #modal-reserva').forEach(function(m){ m.style.display='none'; });
-  var previo=document.getElementById('modal-descarga-app');
+  var previo=document.getElementById('modal-reserva-confirmada');
   if(previo) previo.remove();
 
-  // Crear y mostrar modal de descarga
-  var modalApp=document.createElement('div');
-  modalApp.id='modal-descarga-app';
-  modalApp.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-  modalApp.innerHTML=
-    '<div style="background:#fff;border-radius:24px;padding:40px 32px;max-width:380px;width:100%;text-align:center;position:relative;">'
-    +'<button onclick="_cerrarModalDescargaApp()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#8BA3A0;">✕</button>'
-    +'<div style="font-size:52px;margin-bottom:12px;">📱</div>'
-    +'<h2 style="font-size:22px;font-weight:800;color:#1C2B2A;margin-bottom:10px;">Descargá la app para continuar</h2>'
-    +'<p style="font-size:14px;color:#5C7A77;line-height:1.7;margin-bottom:16px;">Tu solicitud fue enviada. <strong>Sin la app no podés confirmarla ni pagar.</strong></p>'
-    +'<div style="background:#FEF3C7;border-radius:12px;padding:14px 16px;margin-bottom:24px;border-left:4px solid #D97706;text-align:left;">'
-      +'<div style="font-size:12px;font-weight:800;color:#D97706;margin-bottom:6px;">⚠️ Necesitás la app para:</div>'
-      +'<div style="font-size:13px;color:#92400E;line-height:1.9;">✓ Confirmar la reserva con el paseador<br>✓ Completar el pago de forma segura<br>✓ Recibir tu PIN de retiro<br>✓ Chatear y coordinar los detalles</div>'
+  var rsv = window.reservaActual || {};
+  var pas = window.paseadorSeleccionado || {};
+  var total = Number(window.precioTotalReserva||0);
+
+  var modal=document.createElement('div');
+  modal.id='modal-reserva-confirmada';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+  modal.innerHTML=
+    '<div style="background:#fff;border-radius:24px;max-width:400px;width:100%;position:relative;">'
+    +'<button onclick="cerrarModal()" aria-label="Cerrar" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:#8BA3A0;z-index:1;">✕</button>'
+    +'<div style="text-align:center;padding:32px 24px;">'
+      +'<div style="font-size:52px;margin-bottom:16px;">🐾</div>'
+      +'<h2 style="font-size:22px;font-weight:800;color:#1C2B2A;margin-bottom:12px;">¡Solicitud enviada!</h2>'
+      +'<p style="font-size:15px;color:#5C7A77;line-height:1.7;margin-bottom:20px;">'
+        +'Tu solicitud fue enviada al paseador.<br>Una vez que la acepte, podés pagar desde acá.'
+      +'</p>'
+      +'<div style="background:#E8F5F2;border-radius:12px;padding:16px;margin-bottom:24px;text-align:left;">'
+        +'<div style="font-size:13px;font-weight:700;color:#2D9B87;margin-bottom:8px;">📋 Resumen de tu reserva:</div>'
+        +'<div style="font-size:13px;color:#5C7A77;line-height:1.9;">'
+          +'🦮 Paseador: <strong id="confirm-paseador"></strong><br>'
+          +'📅 Fecha: <strong id="confirm-fecha"></strong><br>'
+          +'🕐 Horario: <strong id="confirm-horario"></strong><br>'
+          +'🐕 Mascota: <strong id="confirm-mascota"></strong><br>'
+          +'💰 Total: <strong id="confirm-total" style="color:#2D9B87;font-size:16px;"></strong>'
+        +'</div>'
+      +'</div>'
+      +'<button onclick="pagarConMP()" id="btn-pagar-mp" style="width:100%;padding:16px;background:#009EE3;color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">'
+        +'<img src="https://http2.mlstatic.com/frontend-assets/ml-web-navigation/ui-navigation/5.21.22/mercadopago/logo__large-v2.png" alt="MercadoPago" style="height:20px;filter:brightness(0) invert(1);"/>'
+        +'<span id="btn-pagar-mp-label">Pagar ahora</span>'
+      +'</button>'
+      +'<p style="font-size:12px;color:#8BA3A0;">'
+        +'El pago se procesa de forma segura con MercadoPago.<br>'
+        +'El paseador recibe el dinero solo cuando confirmás que recibiste a tu mascota.'
+      +'</p>'
+      +'<button onclick="cerrarModal()" style="margin-top:12px;background:none;border:none;color:#8BA3A0;font-size:13px;cursor:pointer;">Cerrar y pagar después</button>'
     +'</div>'
-    +'<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">'
-      +'<a href="#" style="display:flex;align-items:center;gap:12px;background:#2D9B87;color:#fff;text-decoration:none;padding:16px 20px;border-radius:14px;font-weight:700;">'
-        +'<span style="font-size:24px;">🤖</span>'
-        +'<div style="text-align:left;"><div style="font-size:10px;opacity:0.8;">Descargar en</div><div style="font-size:16px;font-weight:800;">Google Play</div></div>'
-        +'<span style="margin-left:auto;">→</span>'
-      +'</a>'
-      +'<a href="#" style="display:flex;align-items:center;gap:12px;background:#2D9B87;color:#fff;text-decoration:none;padding:16px 20px;border-radius:14px;font-weight:700;">'
-        +'<span style="font-size:24px;">🍎</span>'
-        +'<div style="text-align:left;"><div style="font-size:10px;opacity:0.8;">Descargar en</div><div style="font-size:16px;font-weight:800;">App Store</div></div>'
-        +'<span style="margin-left:auto;">→</span>'
-      +'</a>'
-    +'</div>'
-    +'<p style="font-size:11px;color:#8BA3A0;">La app es gratuita. Tu solicitud ya está guardada y te espera adentro.</p>'
     +'</div>';
-  document.body.appendChild(modalApp);
+  document.body.appendChild(modal);
+
+  // Rellenar el resumen con los datos de la reserva actual
+  document.getElementById('confirm-paseador').textContent = pas.nombre || '—';
+  document.getElementById('confirm-fecha').textContent    = rsv.fechaLabel || _fmtFechaReserva(rsv.fecha);
+  document.getElementById('confirm-horario').textContent  = _fmtHorarioReserva(rsv.horario, rsv.prestadorRol);
+  document.getElementById('confirm-mascota').textContent  = rsv.mascotaNombre || '—';
+  document.getElementById('confirm-total').textContent    = '$' + total.toLocaleString('es-AR');
 }
 
 // Restaura los modales normales (el paso anterior los oculta con display:none inline
@@ -5141,18 +5242,22 @@ function mostrarReservaCtaModal(){
 function _restaurarModalesNormales(){
   document.querySelectorAll('.modal-overlay, .modal, #modal-reserva').forEach(function(m){ m.style.display=''; });
 }
-function _cerrarModalDescargaApp(){
-  var el=document.getElementById('modal-descarga-app');
+// Cierra el modal de confirmación/pago de la reserva.
+function cerrarModal(){
+  var el=document.getElementById('modal-reserva-confirmada');
   if(el) el.remove();
   _restaurarModalesNormales();
+  document.body.style.overflow='';
 }
+// Alias histórico (el modal de descarga de la app fue reemplazado por el de pago)
+function _cerrarModalDescargaApp(){ cerrarModal(); }
 
-// Cierra cualquier modal/panel que haya quedado abierto (auth, T&C, reserva, chat, CTA de app)
+// Cierra cualquier modal/panel que haya quedado abierto (auth, T&C, reserva, chat, pago)
 function cerrarTodosLosModales(){
   document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open'); });
   var rp=document.getElementById('reservaPanel'); if(rp) rp.classList.remove('open');
   var cp=document.getElementById('chatPanel'); if(cp) cp.classList.remove('open');
-  var ctaApp=document.getElementById('modal-descarga-app'); if(ctaApp) ctaApp.remove();
+  var pago=document.getElementById('modal-reserva-confirmada'); if(pago) pago.remove();
   _restaurarModalesNormales();
   document.body.style.overflow='';
 }
@@ -5723,8 +5828,29 @@ async function _rpConfirmar(){
       var rMsg=await _msgInsert(reservaId,_rp.prestadorId,mensajeInicial,{tipo:'texto'});
       if(rMsg.error) console.warn('[Reserva] La reserva se creó pero el mensaje inicial no se pudo guardar:',rMsg.error.message);
     }
+
+    // Contexto de la reserva recién creada, para el modal de pago y pagarConMP()
+    _mpInitPoint=null;
+    window.reservaActual={
+      id:reservaId,
+      fecha:fechaSeleccionada,
+      fechaLabel:(dias>1
+        ? _fmtFechaReserva(fechaSeleccionada)+' al '+_fmtFechaReserva(_rp.fechaFin)+' ('+dias+' días)'
+        : _fmtFechaReserva(fechaSeleccionada)),
+      horario:horarioSeleccionado,
+      mascotaNombre:mascotaNombre,
+      servicioTipo:tipoServicio,
+      prestadorRol:_rp.prestadorRol
+    };
+    window.paseadorSeleccionado={ id:_rp.prestadorId, nombre:paseadorObj.nombre, barrio:paseadorObj.barrio };
+    window.precioTotalReserva=precioTotal;
+
     _cerrarRP();
     mostrarReservaCtaModal();
+    // Paso 3: crear la preferencia de pago ya, para que "Pagar ahora" abra el
+    // checkout al toque (el window.open va en el click, no acá — ver comentario
+    // en _precrearPreferenciaMP).
+    _precrearPreferenciaMP();
   }catch(err){
     if(btn){btn.disabled=false;btn.textContent='Confirmar reserva ✓';}
     showToast('Error: '+err.message,'');
@@ -8472,41 +8598,6 @@ window.checkSupabase = checkSupabase;
     <div class="rp-progress" id="rpProgress"></div>
     <div class="rp-body" id="rpBody"><div class="rp-loading">Cargando...</div></div>
     <div class="rp-footer" id="rpFooter" style="display:none;"></div>
-  </div>
-</div>
-
-<!-- ── MODAL CTA APP (post-reserva) ─────────────────────────── -->
-<div class="modal-overlay" id="reservaCtaModal" role="dialog" aria-modal="true" aria-labelledby="reservaCtaTitle">
-  <div class="modal" style="max-width:400px;">
-    <div style="text-align:center;padding:8px;">
-      <div style="font-size:56px;margin-bottom:16px;">🐾</div>
-      <h2 id="reservaCtaTitle" style="font-size:22px;font-weight:800;color:var(--dark);margin-bottom:12px;">¡Solicitud enviada!</h2>
-      <p style="font-size:15px;color:var(--g600);line-height:1.7;margin-bottom:8px;">
-        Tu solicitud fue enviada correctamente. El paseador te va a confirmar a la brevedad.
-      </p>
-      <p style="font-size:14px;color:var(--g600);line-height:1.7;margin-bottom:28px;">
-        Para chatear, confirmar el pago y recibir el PIN de retiro descargá la app de Cani.
-      </p>
-
-      <div style="display:flex;flex-direction:column;gap:12px;max-width:280px;margin:0 auto 24px;">
-        <a href="#" style="display:flex;align-items:center;gap:12px;background:var(--dark);color:#fff;text-decoration:none;padding:14px 20px;border-radius:14px;justify-content:center;">
-          <span style="font-size:24px;">🤖</span>
-          <div style="text-align:left;">
-            <div style="font-size:10px;opacity:0.7;">Disponible en</div>
-            <div style="font-size:15px;font-weight:700;">Google Play</div>
-          </div>
-        </a>
-        <a href="#" style="display:flex;align-items:center;gap:12px;background:var(--dark);color:#fff;text-decoration:none;padding:14px 20px;border-radius:14px;justify-content:center;">
-          <span style="font-size:24px;">🍎</span>
-          <div style="text-align:left;">
-            <div style="font-size:10px;opacity:0.7;">Disponible en</div>
-            <div style="font-size:15px;font-weight:700;">App Store</div>
-          </div>
-        </a>
-      </div>
-
-      <button onclick="cerrarTodosLosModales()" style="background:none;border:none;color:var(--g400);font-size:13px;cursor:pointer;">Cerrar</button>
-    </div>
   </div>
 </div>
 

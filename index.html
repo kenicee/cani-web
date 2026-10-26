@@ -5984,9 +5984,18 @@ function _msgPayload(reservaId, receptorId, texto, extra){
 
 async function _msgInsert(reservaId, receptorId, texto, extra){
   var payload = _msgPayload(reservaId, receptorId, texto, extra);
+  var remitente_id = payload.remitente_id;
+  const { data: { user } } = await sb.auth.getUser()
+  console.log('[Chat] user.id:', user?.id)
+  console.log('[Chat] remitente_id que se manda:', remitente_id)
+  console.log('[Chat] son iguales:', user?.id === remitente_id)
+  console.log('[Chat] payload completo:', payload)
+  // Sin .select().single(): con RLS, si la policy de SELECT no deja leer la fila
+  // recién insertada, Postgres rechaza el INSERT entero con "new row violates
+  // row-level security policy". Devolvemos data:null y el llamador recarga.
   for(var i=0;i<12;i++){
-    var r = await sb.from('mensajes').insert(payload).select().single();
-    if(!r.error) return r;
+    var r = await sb.from('mensajes').insert(payload);
+    if(!r.error) return {data:null,error:null};
     var m = (r.error.message||'').match(/Could not find the '([^']+)' column|column "?([a-z_]+)"? of relation "mensajes" does not exist|column mensajes\.([a-z_]+) does not exist/);
     var col = m && (m[1]||m[2]||m[3]);
     if(col && Object.prototype.hasOwnProperty.call(payload,col)){
@@ -5996,17 +6005,9 @@ async function _msgInsert(reservaId, receptorId, texto, extra){
       if(!payload.texto && !payload.contenido) return r;
       continue;
     }
-    // PGRST116 = el INSERT anduvo pero el SELECT de vuelta no devolvió fila
-    // (RLS suele permitir escribir y no leer). No es un fallo de envío:
-    // reintentamos sin .select() y el llamador recarga la conversación.
-    if(r.error.code==='PGRST116'){
-      var r2 = await sb.from('mensajes').insert(payload);
-      if(!r2.error) return {data:null,error:null};
-      return r2;
-    }
     return r;
   }
-  return await sb.from('mensajes').insert(payload).select().single();
+  return await sb.from('mensajes').insert(payload);
 }
 
 // Lee un mensaje sin importar con qué nombres esté guardado.
@@ -6183,8 +6184,8 @@ async function _chatEnviar(){
   var input=document.getElementById('chatInput');if(!input)return;
   var texto=input.value.trim();if(!texto||!_chat.reservaId)return;
   input.value='';
-  // .select().single() nos devuelve la fila insertada para pintarla en el acto,
-  // sin depender de que Realtime esté habilitado en la tabla `mensajes`.
+  // El INSERT no devuelve la fila (ver _msgInsert), así que recargamos la
+  // conversación sin depender de que Realtime esté habilitado en `mensajes`.
   var r=await _msgInsert(_chat.reservaId,_chat.otroUserId,texto,{tipo:'texto'});
   if(r.error){
     console.error('[Chat] Error al enviar mensaje:',r.error.message);

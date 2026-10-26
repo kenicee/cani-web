@@ -281,6 +281,33 @@ nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-
 .paseador-badge{position:relative;}
 .premium-badge{position:absolute;top:12px;left:12px;background:var(--gold);color:#78350F;font-size:10px;font-weight:800;padding:4px 10px;border-radius:99px;}
 
+/* ── BLOG / CONSEJOS PARA DUEÑOS ─────────────────────── */
+.blog-section{padding:80px 0;background:var(--white);}
+.blog-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:960px;margin:0 auto;}
+.blog-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--g100);border-radius:20px;padding:28px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;text-align:left;}
+.blog-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(28,43,42,.08);border-color:var(--g200);}
+.blog-card-emoji{font-size:44px;line-height:1;margin-bottom:18px;}
+.blog-card-titulo{font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--dark);line-height:1.25;margin-bottom:10px;}
+.blog-card-resumen{font-size:14px;color:var(--g600);line-height:1.7;margin-bottom:18px;flex:1;}
+.blog-card-meta{font-size:12px;color:var(--g400);margin-bottom:14px;}
+.blog-card-link{font-size:14px;font-weight:700;color:var(--primary);text-decoration:none;}
+.blog-card:hover .blog-card-link{color:var(--primary-dk);}
+.blog-modal{max-width:720px;padding:40px;}
+.blog-art-head{margin-bottom:20px;padding-right:32px;}
+.blog-art-head .blog-card-emoji{margin-bottom:12px;}
+.blog-art-head h2{font-size:clamp(22px,3vw,30px);color:var(--dark);margin-bottom:8px;}
+.blog-art{font-size:15px;color:var(--g600);line-height:1.8;}
+.blog-art h3{font-size:18px;color:var(--dark);margin:26px 0 8px;}
+.blog-art p{margin-bottom:14px;}
+.blog-art ul{margin:0 0 14px 20px;}
+.blog-art li{margin-bottom:6px;}
+.blog-art strong{color:var(--dark);}
+.blog-art-cta{margin-top:24px;padding:18px 20px;background:var(--primary-lt);border-radius:14px;color:var(--primary-dk);font-weight:600;}
+@media(max-width:720px){
+  .blog-grid{grid-template-columns:1fr;}
+  .blog-modal{padding:28px 20px;}
+}
+
 /* ── PELUDOS FELICES ─────────────────────────────────── */
 .felices-section{padding:80px 0;background:var(--bg);}
 .felices-carousel{max-width:1100px;margin:0 auto;}
@@ -2958,6 +2985,194 @@ h1,h2,h3,h4{line-height:1.12;}
   </div>
 </section>
 
+<!-- ── BLOG / CONSEJOS PARA DUEÑOS ───────────────────────── -->
+<section id="consejos" class="blog-section">
+  <div class="container">
+    <div class="section-head fade-up">
+      <div class="section-label">Blog Cani</div>
+      <h2 class="section-title">Consejos para dueños 🐾</h2>
+      <p class="section-sub">Artículos útiles sobre el cuidado de tus mascotas</p>
+    </div>
+    <div class="blog-grid" id="blogGrid"></div>
+  </div>
+
+  <!-- Texto completo de cada artículo. Va en el HTML (oculto) y no armado por JS
+       para que buscadores y asistentes de IA lo lean sin ejecutar scripts. -->
+  <div id="blogArticulos" hidden>
+    <article class="blog-art" id="art-cuanto-cuesta-pasear-perro-buenos-aires">
+      <p>Si vivís en Buenos Aires y trabajás afuera de casa, tarde o temprano te vas a preguntar cuánto sale que alguien pasee a tu perro. La respuesta corta: <strong>en CABA un paseo cuesta entre $2.800 y $8.000</strong>, según el tipo de paseo, cuánto dura y en qué barrio vivís. La respuesta larga está en esta guía, para que sepas qué estás pagando y cómo no pagar de más.</p>
+
+      <h3>Paseo grupal vs. paseo individual</h3>
+      <p>Es lo que más cambia el precio. En el <strong>paseo grupal</strong> el paseador sale con varios perros a la vez. Es la opción más económica y suele estar en la parte baja del rango: entre <strong>$2.800 y $4.500</strong> por salida. Les sirve a perros sociables, que se llevan bien con otros y no tiran demasiado de la correa.</p>
+      <p>En el <strong>paseo individual</strong> tu perro sale solo con el paseador. Cuesta más, en general entre <strong>$5.000 y $8.000</strong>, pero tiene ventajas claras: atención exclusiva, ritmo adaptado y menos riesgo de peleas o contagios. Lo recomendamos para cachorros, perros mayores, reactivos, con problemas de salud o que recién se están adaptando.</p>
+
+      <h3>La duración del paseo</h3>
+      <p>Lo más común en la Ciudad son paseos de <strong>30, 45 o 60 minutos</strong>. Un paseo de media hora alcanza para que haga sus necesidades y se despeje. Para razas con mucha energía (border collie, labrador, ovejero, beagle) lo ideal es una hora, o dos salidas por día. Como referencia, pasar de 30 a 60 minutos suele sumar entre un 40% y un 70% al precio.</p>
+
+      <h3>El barrio también cuenta</h3>
+      <p>En barrios con mucha demanda y buenos espacios verdes cerca, como <strong>Palermo, Belgrano, Recoleta o Núñez</strong>, los precios tienden a estar más arriba. En barrios más residenciales del oeste y del sur suele haber valores más accesibles. Influye cuánto tiene que viajar el paseador para buscar a tu perro y qué tan lejos queda la plaza o el parque más cercano.</p>
+
+      <h3>Packs semanales y mensuales</h3>
+      <p>Si necesitás paseos todos los días, preguntá por <strong>packs</strong>. Muchos paseadores hacen descuento si contratás 5 paseos por semana o el mes completo: es común ahorrar entre un 10% y un 20% respecto de pagar cada paseo por separado. Además, la rutina fija le hace muy bien a tu perro: sabe cuándo sale y con quién.</p>
+
+      <h3>Qué debería incluir el precio</h3>
+      <ul>
+        <li>Buscar y devolver a tu perro en tu casa.</li>
+        <li>El paseo completo, por el tiempo acordado.</li>
+        <li>Levantar los desechos durante el recorrido.</li>
+        <li>Agua en días de calor.</li>
+        <li>Un aviso o foto al terminar, para que sepas que todo salió bien.</li>
+      </ul>
+      <p>Lo que puede tener costo extra: secar o limpiar patas en días de lluvia, dar medicación, paseos en feriados o en horarios muy temprano o muy tarde.</p>
+
+      <h3>¿Conviene buscar el más barato?</h3>
+      <p>No siempre. Un paseo muy por debajo del promedio suele significar grupos enormes, menos tiempo real de caminata o alguien sin experiencia. Tu perro va a estar en la calle, cruzando avenidas, con otros perros y con un desconocido: vale la pena pagar un poco más por alguien <strong>verificado, con reseñas reales y que se comunique bien</strong>.</p>
+
+      <h3>Cómo pagar de forma segura</h3>
+      <p>Evitá adelantar plata en efectivo a alguien que no conocés. Lo ideal es pagar por una plataforma que guarde el registro del servicio y te dé respaldo si algo sale mal. En Cani pagás con MercadoPago y ves el precio final antes de confirmar.</p>
+
+      <p class="blog-art-cta">En Cani podés comparar paseadores de tu barrio, ver sus precios y reseñas, y reservar en minutos. 🐾</p>
+      <p style="font-size:12px;color:var(--g400);">Los valores son orientativos a octubre de 2026 y pueden variar según cada paseador.</p>
+    </article>
+
+    <article class="blog-art" id="art-como-elegir-paseador-perro-confianza">
+      <p>Dejar a tu perro con alguien que no conocés da nervios, y está bien que así sea: vas a confiarle a un integrante de la familia. La buena noticia es que hay formas concretas de darte cuenta si un paseador es de confianza antes de entregarle la correa. Estos son los <strong>5 puntos que tenés que revisar</strong>, y las señales de alarma que no deberías pasar por alto.</p>
+
+      <h3>1. Identidad verificada</h3>
+      <p>Lo primero es saber quién es. Un paseador serio no tiene problema en mostrarte su <strong>DNI</strong>, decirte dónde vive y cómo contactarlo. En plataformas como Cani revisamos la identidad de cada paseador y cuidador antes de aprobar su perfil, así no tenés que hacerlo vos de cero. Si alguien esquiva estas preguntas, ya tenés una respuesta.</p>
+
+      <h3>2. Reseñas reales de otros dueños</h3>
+      <p>Las opiniones de otras familias son la mejor pista. Fijate que sean <strong>recientes, variadas y con detalle</strong>: "Cata volvió cansada y feliz, y me mandó fotos del parque" dice mucho más que un "excelente" suelto. Desconfiá de perfiles con muchas reseñas iguales, escritas el mismo día. Si podés, preguntale a algún vecino que use el mismo paseador.</p>
+
+      <h3>3. Un encuentro antes del primer paseo</h3>
+      <p>Antes de arrancar, pedí un <strong>encuentro de presentación</strong>: que conozca a tu perro, vea cómo se lleva con él y escuche sus costumbres. Contale todo lo importante:</p>
+      <ul>
+        <li>Si tira de la correa, se asusta con motos o colectivos, o reacciona con otros perros.</li>
+        <li>Alergias, medicación o problemas de salud.</li>
+        <li>Si se escapa, come cosas del piso o no se deja agarrar.</li>
+        <li>Qué comandos conoce.</li>
+      </ul>
+      <p>Mirá cómo lo trata: un buen paseador se agacha, le da tiempo para olfatearlo y no lo fuerza.</p>
+
+      <h3>4. Cuántos perros saca a la vez y cómo los maneja</h3>
+      <p>Preguntá <strong>con cuántos perros sale por grupo</strong> y cómo los arma. Un grupo demasiado grande hace imposible controlar a todos en una esquina o en una plaza con gente. Un buen paseador agrupa por tamaño y temperamento, usa correas firmes, no suelta perros en la calle y sabe qué hacer si dos se pelean. Si tu perro es nuevo, reactivo o muy chico, pedí paseo individual al principio.</p>
+
+      <h3>5. Comunicación y seguimiento</h3>
+      <p>Tenés que saber qué pasa durante el paseo. Lo ideal es que te avise cuando lo busca y cuando lo devuelve, y que te mande alguna <strong>foto o video</strong>. En Cani tenés chat con el paseador dentro de cada reserva y un <strong>PIN de retiro</strong> para que solo la persona confirmada pueda llevarse a tu perro.</p>
+
+      <h3>Señales de alarma</h3>
+      <ul>
+        <li>Te pide pagar todo por adelantado, en efectivo, sin ningún registro.</li>
+        <li>No quiere conocer a tu perro antes del primer paseo.</li>
+        <li>Llega tarde seguido o cambia horarios sin avisar.</li>
+        <li>Tu perro vuelve con lastimaduras, muy agitado, sin haber hecho sus necesidades o con miedo de salir.</li>
+        <li>Lo ves con más perros de los que puede manejar, o con perros sueltos en la vereda.</li>
+        <li>No contesta mensajes durante el paseo.</li>
+      </ul>
+
+      <h3>Confiá también en tu perro</h3>
+      <p>Los perros nos dicen mucho. Si después de un par de semanas tu perro <strong>se alegra cuando llega el paseador</strong> y vuelve tranquilo, vas por buen camino. Si se esconde o no quiere salir, hablalo y, si hace falta, cambiá.</p>
+
+      <p class="blog-art-cta">En Cani todos los paseadores pasan por un proceso de verificación, tienen reseñas de otros dueños y los coordinás por chat. Buscá uno en tu barrio. 🐾</p>
+    </article>
+
+    <article class="blog-art" id="art-guarderia-diurna-perros-caba">
+      <p>Si pasás muchas horas fuera de casa, seguramente te preocupa que tu perro esté solo todo el día. La <strong>guardería diurna</strong> es una de las mejores opciones para que esté acompañado, se mueva y no se aburra mientras trabajás. En esta guía te contamos cómo funciona en la Ciudad, cuánto cuesta y cómo saber si le conviene a tu perro.</p>
+
+      <h3>¿Qué es la guardería diurna?</h3>
+      <p>Es un servicio en el que <strong>dejás a tu perro a la mañana y lo retirás a la tarde</strong>, como un jardín de infantes. En ese tiempo alguien lo cuida, juega con él, lo saca a pasear y le da agua y, si lo acordaron, su comida. No incluye que pase la noche: para eso existe el cuidado en casa u hospedaje.</p>
+      <p>En CABA hay dos formatos:</p>
+      <ul>
+        <li><strong>Guarderías en espacios dedicados</strong>, con muchos perros, patio y personal.</li>
+        <li><strong>Guardería en casa de un cuidador</strong>, con pocos perros a la vez y un ambiente más familiar. Es el formato que vas a encontrar en Cani.</li>
+      </ul>
+
+      <h3>¿Para qué perros es ideal?</h3>
+      <ul>
+        <li>Perros que <strong>sufren cuando se quedan solos</strong>: lloran, ladran o rompen cosas.</li>
+        <li>Cachorros que todavía no aguantan muchas horas sin salir.</li>
+        <li>Razas con mucha energía que necesitan más actividad que un paseo.</li>
+        <li>Perros sociables que disfrutan de otros perros y personas.</li>
+      </ul>
+      <p>Si tu perro es muy mayor, muy miedoso o no se lleva bien con otros, la guardería en casa de un cuidador, con pocos perros, suele funcionar mejor que un lugar grande y ruidoso. Otra opción es combinar paseos individuales con visitas cortas.</p>
+
+      <h3>¿Cuánto cuesta en Buenos Aires?</h3>
+      <p>En Cani la guardería diurna arranca en <strong>alrededor de $14.000 por día</strong>, según el barrio, la cantidad de horas y lo que incluya (paseos, comida, medicación). Si la vas a usar varias veces por semana, preguntá por precios semanales o mensuales: muchos cuidadores hacen descuento, y también por una segunda mascota.</p>
+
+      <h3>Qué tenés que preguntar antes de elegir</h3>
+      <ul>
+        <li><strong>Cuántos perros cuida a la vez</strong> y de qué tamaños.</li>
+        <li>Si tiene patio o espacio al aire libre, y si hay una plaza cerca para salir.</li>
+        <li>Si vive con mascotas propias y cómo son.</li>
+        <li>Qué hace si tu perro se siente mal: a qué veterinaria lo lleva y cómo te avisa.</li>
+        <li>Si te puede mandar fotos o novedades durante el día.</li>
+        <li>Horarios de entrega y retiro, y qué pasa si llegás tarde.</li>
+      </ul>
+
+      <h3>Vacunas y salud</h3>
+      <p>Como tu perro va a compartir espacio con otros, es clave que tenga el <strong>plan de vacunación al día</strong>: la antirrábica, que es obligatoria por ley en Argentina, y las vacunas múltiples que indique tu veterinario. También conviene que esté desparasitado y con su protección contra pulgas y garrapatas. Un buen cuidador te va a pedir esta información, y vos deberías esperar lo mismo de los demás dueños.</p>
+
+      <h3>La adaptación lleva unos días</h3>
+      <p>No esperes que el primer día sea perfecto. Lo ideal es empezar con <strong>medio día</strong> y después ir sumando horas. Llevale algo con olor a casa (una mantita o un juguete) y su comida habitual para evitar problemas de panza. Después de las primeras veces es normal que vuelva muy cansado: es buena señal.</p>
+
+      <h3>¿Guardería o paseos?</h3>
+      <p>Si tu perro está bien solo pero necesita moverse, con <strong>uno o dos paseos por día</strong> alcanza y es más económico. Si lo que le pesa es la soledad, la guardería es la mejor respuesta. Muchas familias combinan: guardería los días de oficina y paseos los días de home office.</p>
+
+      <p class="blog-art-cta">En Cani encontrás cuidadores que ofrecen guardería diurna en su casa, con disponibilidad, precios y reseñas a la vista. 🐾</p>
+    </article>
+
+    <article class="blog-art" id="art-barrios-mejores-pasear-perro-palermo-belgrano">
+      <p>Buenos Aires es una ciudad muy perruna: en cualquier plaza vas a cruzarte con paseadores, grupos de dueños y caniles llenos a la tarde. Pero no todos los barrios ofrecen lo mismo. Estos son los lugares que más recomiendan nuestros paseadores, y algunos consejos para aprovecharlos.</p>
+
+      <h3>Palermo</h3>
+      <p>Es el gran clásico. Los <strong>Bosques de Palermo</strong> (Parque Tres de Febrero) tienen kilómetros de verde, lagos y senderos para caminatas largas. Los fines de semana se llena de gente y bicicletas, así que para perros que se ponen nerviosos conviene ir temprano o en días de semana. El <strong>Parque Las Heras</strong>, más chico y de barrio, tiene canil y es punto de encuentro de muchos paseadores.</p>
+
+      <h3>Belgrano</h3>
+      <p>Las <strong>Barrancas de Belgrano</strong> son ideales: tienen desniveles, mucha sombra y canil, y son más tranquilas que los Bosques. Las plazas del barrio y las calles arboladas de Belgrano R hacen que los paseos de todos los días sean muy agradables. Además, desde Belgrano es fácil acercarse al verde de la costa.</p>
+
+      <h3>Recoleta</h3>
+      <p>La zona de <strong>Plaza Francia</strong> y las plazas cercanas a la Facultad de Derecho y al Museo de Bellas Artes tienen mucho espacio abierto. Es un barrio con muchísimos perros, así que tu perro va a tener compañía; si es reactivo, elegí horarios tranquilos. Las veredas anchas de la zona ayudan en los paseos con correa.</p>
+
+      <h3>Caballito</h3>
+      <p>El <strong>Parque Centenario</strong> es el corazón perruno del centro geográfico de la Ciudad: tiene canil, sendero circular y mucho movimiento todo el día. El <strong>Parque Rivadavia</strong> es otra buena opción para paseos con sombra.</p>
+
+      <h3>Núñez y Saavedra</h3>
+      <p>Para perros que necesitan correr, el <strong>Parque Saavedra</strong> y el <strong>Parque Sarmiento</strong> tienen grandes extensiones de pasto y suelen estar menos concurridos que los parques de Palermo. En Núñez, las plazas del barrio son tranquilas y residenciales, ideales para paseos diarios.</p>
+
+      <h3>Villa Crespo, Almagro y alrededores</h3>
+      <p>Barrios con menos parques grandes, pero con <strong>plazas con canil</strong> y calles tranquilas. Los paseadores de la zona suelen combinar recorridos por el barrio con escapadas al Parque Centenario, que queda cerca.</p>
+
+      <h3>Qué tener en cuenta en cualquier barrio</h3>
+      <ul>
+        <li><strong>Calor:</strong> en verano el asfalto quema las almohadillas. Paseá temprano a la mañana o después de que baje el sol, y llevá siempre agua.</li>
+        <li><strong>Correa siempre en la calle:</strong> soltalo solo en caniles o espacios cerrados habilitados.</li>
+        <li><strong>Levantá los desechos:</strong> es una obligación en la Ciudad y hace que los espacios sigan siendo amigables con los perros.</li>
+        <li><strong>Caniles:</strong> antes de entrar, mirá cómo está el grupo. Si hay tensión, esperá o seguí de largo. No entres con perras en celo ni con perros sin vacunas.</li>
+        <li><strong>Pirotecnia y tormentas:</strong> en fechas como Año Nuevo, usá arnés bien ajustado y paseos cortos; muchos perros se escapan por miedo.</li>
+        <li><strong>Chapita con datos:</strong> un collar con tu teléfono es la forma más rápida de que te lo devuelvan si se pierde.</li>
+      </ul>
+
+      <h3>¿El mejor lugar? El que tu perro disfruta</h3>
+      <p>Más que el parque más lindo, lo que importa es que el paseo sea <strong>constante, seguro y adaptado a tu perro</strong>: un cachorro necesita explorar, un perro mayor necesita sombra y calma, y uno muy activo necesita espacio para correr. Un buen paseador conoce los rincones de su barrio y sabe cuál le conviene a cada uno.</p>
+
+      <p class="blog-art-cta">En Cani podés filtrar paseadores por barrio y ver en el mapa quién está cerca tuyo. 🐾</p>
+    </article>
+  </div>
+</section>
+
+<!-- ── MODAL ARTÍCULO DEL BLOG ───────────────────────────── -->
+<div class="modal-overlay" id="blogModal" role="dialog" aria-modal="true" aria-labelledby="blogModalTitle" style="z-index:1100;">
+  <div class="modal blog-modal">
+    <button class="modal-close" onclick="cerrarArticulo()" aria-label="Cerrar artículo">✕</button>
+    <div class="blog-art-head">
+      <div class="blog-card-emoji" id="blogModalEmoji"></div>
+      <h2 id="blogModalTitle"></h2>
+      <div class="blog-card-meta" id="blogModalMeta"></div>
+    </div>
+    <div id="blogModalBody"></div>
+  </div>
+</div>
+
 <!-- ── DOWNLOAD ────────────────────────────────────────── -->
 <section id="download" class="download">
   <div class="container" style="position:relative;z-index:1;">
@@ -3650,6 +3865,51 @@ sb.auth.getSession().then(function(result){
   }
 });
 
+// ── RETORNO DE MERCADOPAGO ────────────────────────────────
+// MP vuelve a la web con ?collection_status=...&external_reference=...&payment_id=...
+// El pago se guarda en columnas aparte (pago_estado / mp_payment_id) y NO en
+// `estado`: todo el sistema de capacidad y aceptación trabaja con
+// estado in (pendiente, aceptado), y una reserva 'pagado' liberaría el horario
+// y le sacaría al prestador los botones de aceptar/rechazar.
+// OJO: esto corre en el navegador y confía en los parámetros de la URL. La
+// confirmación confiable es un webhook server-side que consulte el pago a MP.
+async function _mpProcesarRetorno(){
+  var urlParams = new URLSearchParams(window.location.search);
+  var paymentStatus = urlParams.get('collection_status') || urlParams.get('status');
+  if(!paymentStatus) return;
+  var guardada = null;
+  try { guardada = localStorage.getItem('cani_mp_reserva'); } catch(_){}
+  var externalRef = urlParams.get('external_reference');
+  // Si la preferencia no tiene external_reference MP manda "null" literal.
+  if(!externalRef || externalRef === 'null') externalRef = guardada;
+  var paymentId = urlParams.get('payment_id') || urlParams.get('collection_id');
+  console.log('[MP Webhook]', { paymentStatus: paymentStatus, externalRef: externalRef, paymentId: paymentId });
+  if(!externalRef) return;
+  var limpiarUrl = function(){
+    window.history.replaceState({}, '', window.location.pathname);
+    try { localStorage.removeItem('cani_mp_reserva'); } catch(_){}
+  };
+
+  if(paymentStatus === 'approved'){
+    var body = { pago_estado: 'aprobado', mp_payment_id: paymentId };
+    var r = await sb.from('reservas').update(body).eq('id', externalRef);
+    if(r.error){
+      console.error('[MP Webhook] No se pudo marcar la reserva como pagada:', r.error.message);
+      mostrarError('Recibimos tu pago, pero no pudimos actualizar la reserva. Escribinos y lo resolvemos.');
+      return; // dejamos los params para poder reintentar recargando
+    }
+    showToast('✅ Pago confirmado. Tu reserva está activa.', 'success');
+    limpiarUrl();
+  } else if(paymentStatus === 'rejected'){
+    mostrarError('El pago fue rechazado. Intentá de nuevo.');
+    limpiarUrl();
+  } else if(paymentStatus === 'pending' || paymentStatus === 'in_process'){
+    showToast('⏳ Pago pendiente. Te avisamos cuando se confirme.', '');
+    limpiarUrl();
+  }
+}
+_mpProcesarRetorno();
+
 // Cerrar modal al hacer click en el overlay
 document.getElementById('authModal').addEventListener('click', function(e){
   if(e.target === this) closeAuthModal();
@@ -3664,7 +3924,7 @@ document.addEventListener('keydown', function(e){
   if(e.key !== 'Escape') return;
   var tyc=document.getElementById('tycModal');
   if(tyc && tyc.classList.contains('open')){ cerrarModalTyC(); return; }
-  var extra=[['privacidadModal',cerrarModalPrivacidad],['cookiesModal',cerrarModalCookies],['sobreNosotrosModal',cerrarModalSobreNosotros],['ayudaModal',cerrarModalAyuda],['modal-contacto',cerrarModalContacto]];
+  var extra=[['privacidadModal',cerrarModalPrivacidad],['cookiesModal',cerrarModalCookies],['sobreNosotrosModal',cerrarModalSobreNosotros],['ayudaModal',cerrarModalAyuda],['modal-contacto',cerrarModalContacto],['blogModal',cerrarArticulo]];
   for(var i=0;i<extra.length;i++){
     var el=document.getElementById(extra[i][0]);
     if(el && el.classList.contains('open')){ extra[i][1](); return; }
@@ -5224,6 +5484,9 @@ async function pagarConMP(){
     // Si el link ya se creó al confirmar, reusarlo: evita crear dos
     // preferencias distintas para la misma reserva.
     var initPoint = _mpInitPoint || await _crearPreferenciaMP();
+    // Respaldo para _mpProcesarRetorno(): create-payment no manda la reserva como
+    // external_reference, así que MP puede volver sin ese parámetro.
+    try { localStorage.setItem('cani_mp_reserva', (window.reservaActual||{}).id || ''); } catch(_){}
     window.open(initPoint, '_blank');
     _mpSetBtnLabel('✅ Redirigido a MercadoPago');
     if(btn) btn.style.background = '#2D9B87';
@@ -6369,7 +6632,7 @@ function _rsvCardDueno(r){
   return '<div class="rsv-card"><div class="rsv-card-hdr"><div class="rsv-card-av">🐾</div>'
     +'<div><div class="rsv-card-nombre">'+sv+'</div><div class="rsv-card-meta">'+lf+(r.horario?' · '+r.horario:'')+'</div></div>'
     +'<span class="rsv-badge '+bc+'">'+bt+'</span></div>'
-    +(r.mascota_nombre?'<div class="rsv-chips"><div class="rsv-chip">🐾 '+_escapeHtml(r.mascota_nombre)+'</div>'+(r.precio_total?'<div class="rsv-chip">💰 $'+Number(r.precio_total).toLocaleString('es-AR')+'</div>':'')+'</div>':'')
+    +(r.mascota_nombre?'<div class="rsv-chips"><div class="rsv-chip">🐾 '+_escapeHtml(r.mascota_nombre)+'</div>'+(r.precio_total?'<div class="rsv-chip">💰 $'+Number(r.precio_total).toLocaleString('es-AR')+'</div>':'')+(r.pago_estado==='aprobado'?'<div class="rsv-chip">💳 Pagado</div>':'')+'</div>':'')
     +(r.motivo_rechazo?'<div class="rsv-card-nota">'+_escapeHtml(r.motivo_rechazo)+'</div>':'')
     +'<div class="rsv-card-actions"><button class="rsv-action chat" onclick="abrirChat(\''+r.id+'\',\''+r.paseador_id+'\')">💬 Ver chat</button></div></div>';
 }
@@ -6382,7 +6645,7 @@ function _rsvCardPrestador(r,showActions){
   return '<div class="rsv-card"><div class="rsv-card-hdr"><div class="rsv-card-av">👤</div>'
     +'<div><div class="rsv-card-nombre">'+_escapeHtml(r.dueno_nombre||'Dueño')+'</div><div class="rsv-card-meta">'+sv+' · '+lf+(r.horario?' · '+r.horario:'')+'</div></div>'
     +'<span class="rsv-badge '+bc+'">'+bt+'</span></div>'
-    +(r.mascota_nombre?'<div class="rsv-chips"><div class="rsv-chip">🐾 '+_escapeHtml(r.mascota_nombre)+'</div>'+(r.precio_total?'<div class="rsv-chip">💰 $'+Number(r.precio_total).toLocaleString('es-AR')+'</div>':'')+'</div>':'')
+    +(r.mascota_nombre?'<div class="rsv-chips"><div class="rsv-chip">🐾 '+_escapeHtml(r.mascota_nombre)+'</div>'+(r.precio_total?'<div class="rsv-chip">💰 $'+Number(r.precio_total).toLocaleString('es-AR')+'</div>':'')+(r.pago_estado==='aprobado'?'<div class="rsv-chip">💳 Pagado</div>':'')+'</div>':'')
     +(r.nota_dueno?'<div class="rsv-card-nota">💬 '+_escapeHtml(r.nota_dueno)+'</div>':'')
     +'<div class="rsv-card-actions">'
     +(showActions?'<button class="rsv-action aceptar" onclick="_rsvAceptar(\''+r.id+'\',\''+r.dueno_id+'\')">✓ Aceptar</button><button class="rsv-action rechazar" onclick="_rsvRechazar(\''+r.id+'\',\''+r.dueno_id+'\')">✗ Rechazar</button>':'')
@@ -7468,6 +7731,81 @@ window.addEventListener('load', function(){
     initMapa();
   }
 });
+
+// ── BLOG / CONSEJOS PARA DUEÑOS ──────────────────────────
+// El cuerpo de cada artículo vive en el HTML (#blogArticulos > #art-<slug>);
+// acá solo los datos de la card. Cada artículo tiene link propio: #blog/<slug>.
+var articulos = [
+  { slug:'cuanto-cuesta-pasear-perro-buenos-aires', titulo:'¿Cuánto cuesta pasear un perro en Buenos Aires?', resumen:'Todo lo que necesitás saber sobre los precios de paseos en CABA. Desde $2.800 hasta $8.000 según el barrio y la duración.', emoji:'💰', fecha:'Octubre 2026', tiempo:'3 min' },
+  { slug:'como-elegir-paseador-perro-confianza', titulo:'Cómo elegir un paseador de confianza para tu perro', resumen:'Los 5 puntos que tenés que revisar antes de dejar a tu mascota con alguien. Verificación, reseñas y señales de alarma.', emoji:'🔍', fecha:'Octubre 2026', tiempo:'4 min' },
+  { slug:'guarderia-diurna-perros-caba', titulo:'Guardería diurna para perros en CABA: guía completa', resumen:'Qué es la guardería diurna, cuánto cuesta y cómo saber si es la mejor opción para tu perro mientras trabajás.', emoji:'🏡', fecha:'Octubre 2026', tiempo:'5 min' },
+  { slug:'barrios-mejores-pasear-perro-palermo-belgrano', titulo:'Los mejores barrios para pasear tu perro en Buenos Aires', resumen:'Palermo, Belgrano, Recoleta y más. Parques, plazas y circuitos recomendados por nuestros paseadores.', emoji:'🗺️', fecha:'Octubre 2026', tiempo:'4 min' }
+];
+var _blogMetaOriginal = null; // og:title / og:description / title de la home, para restaurar al cerrar
+
+function renderBlog(){
+  var grid=document.getElementById('blogGrid');
+  if(!grid) return;
+  grid.innerHTML=articulos.map(function(a){
+    return '<article class="blog-card" onclick="abrirArticulo(\''+a.slug+'\')">'
+      +'<div class="blog-card-emoji">'+a.emoji+'</div>'
+      +'<h3 class="blog-card-titulo">'+a.titulo+'</h3>'
+      +'<p class="blog-card-resumen">'+a.resumen+'</p>'
+      +'<div class="blog-card-meta">'+a.fecha+' · '+a.tiempo+' de lectura</div>'
+      +'<a class="blog-card-link" href="#blog/'+a.slug+'" onclick="event.preventDefault()">Leer más →</a>'
+      +'</article>';
+  }).join('');
+}
+
+function _blogSetMeta(prop, valor){
+  var el=document.querySelector('meta[property="'+prop+'"]');
+  if(el) el.setAttribute('content', valor);
+}
+
+function abrirArticulo(slug){
+  var a=articulos.find(function(x){return x.slug===slug;});
+  var cuerpo=document.getElementById('art-'+slug);
+  var m=document.getElementById('blogModal');
+  if(!a||!cuerpo||!m) return;
+  if(!_blogMetaOriginal){
+    var ogT=document.querySelector('meta[property="og:title"]');
+    var ogD=document.querySelector('meta[property="og:description"]');
+    _blogMetaOriginal={ title:document.title, ogTitle:ogT&&ogT.content, ogDesc:ogD&&ogD.content };
+  }
+  document.getElementById('blogModalEmoji').textContent=a.emoji;
+  document.getElementById('blogModalTitle').textContent=a.titulo;
+  document.getElementById('blogModalMeta').textContent=a.fecha+' · '+a.tiempo+' de lectura';
+  document.getElementById('blogModalBody').innerHTML=cuerpo.innerHTML;
+  _blogSetMeta('og:title', a.titulo+' | Cani');
+  _blogSetMeta('og:description', a.resumen);
+  document.title=a.titulo+' | Cani';
+  if(location.hash!=='#blog/'+slug) history.replaceState(null,'','#blog/'+slug);
+  m.querySelector('.modal').scrollTop=0;
+  m.classList.add('open');
+}
+
+function cerrarArticulo(){
+  var m=document.getElementById('blogModal');
+  if(m) m.classList.remove('open');
+  if(_blogMetaOriginal){
+    document.title=_blogMetaOriginal.title;
+    if(_blogMetaOriginal.ogTitle!=null) _blogSetMeta('og:title', _blogMetaOriginal.ogTitle);
+    if(_blogMetaOriginal.ogDesc!=null) _blogSetMeta('og:description', _blogMetaOriginal.ogDesc);
+  }
+  if(location.hash.indexOf('#blog/')===0) history.replaceState(null,'',location.pathname+location.search);
+}
+
+function _blogDesdeHash(){
+  if(location.hash.indexOf('#blog/')===0) abrirArticulo(location.hash.slice(6));
+}
+
+renderBlog();
+_blogDesdeHash();
+window.addEventListener('hashchange', _blogDesdeHash);
+(function(){
+  var m=document.getElementById('blogModal');
+  if(m) m.addEventListener('click', function(e){ if(e.target===this) cerrarArticulo(); });
+})();
 
 // ── PELUDOS FELICES (carrusel) ───────────────────────────
 var FELICES_SLIDES = [
